@@ -28,6 +28,7 @@ from openstack_dashboard import policy
 
 from openstack_dashboard.dashboards.project.volumes \
     .volumes import tables as volume_tables
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class LaunchSnapshot(volume_tables.LaunchVolume):
@@ -85,7 +86,7 @@ class EditVolumeSnapshot(policy.PolicyTargetMixin, tables.LinkAction):
                             'os-extended-snapshot-attributes:project_id'),)
 
     def allowed(self, request, snapshot=None):
-        return snapshot.status == "available"
+        return (snapshot.status == "available") and policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class CreateVolumeFromSnapshot(tables.LinkAction):
@@ -94,7 +95,7 @@ class CreateVolumeFromSnapshot(tables.LinkAction):
     url = "horizon:project:volumes:volumes:create"
     classes = ("ajax-modal",)
     icon = "camera"
-    policy_rules = (("volume", "volume:create"),)
+    #policy_rules = (("volume", "volume:create"),)
 
     def get_link_url(self, datum):
         base_url = reverse(self.url)
@@ -102,6 +103,7 @@ class CreateVolumeFromSnapshot(tables.LinkAction):
         return "?".join([base_url, params])
 
     def allowed(self, request, volume=None):
+        return False
         if volume and base.is_service_enabled(request, 'volume'):
             return volume.status == "available"
         return False

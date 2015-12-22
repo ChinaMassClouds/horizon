@@ -13,6 +13,7 @@
 #    under the License.
 
 from django.utils.translation import ugettext_lazy as _
+from openstack_dashboard.openstack.common.log import policy_is
 
 from horizon import tables
 from openstack_dashboard import api
@@ -33,7 +34,7 @@ class DeleteRouter(r_tables.DeleteRouter):
         super(DeleteRouter, self).delete(request, obj_id)
 
     def allowed(self, request, router=None):
-        return True
+        return policy_is(request.user.username ,'admin', 'sysadmin')
 
 
 class EditRouter(r_tables.EditRouter):
@@ -62,3 +63,23 @@ class RoutersTable(r_tables.RoutersTable):
         table_actions = (DeleteRouter,)
         row_actions = (EditRouter, DeleteRouter,)
         Columns = ('tenant', 'name', 'status', 'distributed', 'ext_net')
+
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+        if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+            self.columns['actions'].attrs = {'class':'hide'}
+        return self.columns.values()

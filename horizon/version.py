@@ -12,6 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import pbr.version
 
-version_info = pbr.version.VersionInfo('horizon')
+class VersionInfo(object):
+    release = "REDHATRELEASE"
+    version = "V1.0"
+
+    def version_string(self):
+        return self.version
+
+    def release_string(self):
+        return self.release
+
+version_info = VersionInfo()

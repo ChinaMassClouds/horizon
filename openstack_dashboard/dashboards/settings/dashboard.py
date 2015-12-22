@@ -23,7 +23,8 @@ class Settings(horizon.Dashboard):
     slug = "settings"
     panels = ('user', 'password', )
     default_panel = 'user'
-
+    img = '/static/dashboard/img/nav/Dashboard_settings.png'
+    
     def nav(self, context):
         dash = context['request'].horizon.get('dashboard', None)
         if dash and dash.slug == self.slug:

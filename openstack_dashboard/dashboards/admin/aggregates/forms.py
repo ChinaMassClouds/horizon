@@ -20,6 +20,7 @@ from horizon import messages
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.admin.aggregates import constants
+from openstack_dashboard.openstack.common.log import operate_log
 
 INDEX_URL = constants.AGGREGATES_INDEX_URL
 
@@ -42,6 +43,9 @@ class UpdateAggregateForm(forms.SelfHandlingForm):
             aggregate['availability_zone'] = availability_zone
         try:
             api.nova.aggregate_update(request, id, aggregate)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + "aggregate update")
             message = _('Successfully updated aggregate: "%s."') \
                       % data['name']
             messages.success(request, message)

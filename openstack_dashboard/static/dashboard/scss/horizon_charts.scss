@@ -101,7 +101,7 @@ $min_width_fullscreen_chart_legend: 90px;
       min-height: $min_height_fullscreen_chart;
       min-width: $min_width_fullscreen_chart; }
     svg {
-      padding: 0 0 5px 0; } }
+      padding: 0; } }
   .detail_swatch {
     float: right;
     display: inline-block;

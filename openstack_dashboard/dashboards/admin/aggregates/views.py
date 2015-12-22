@@ -52,6 +52,10 @@ class IndexView(tables.MultiTableView):
         aggregates.sort(key=lambda aggregate: aggregate.name.lower())
         return aggregates
 
+
+
+
+
     def get_availability_zones_data(self):
         request = self.request
         availability_zones = []

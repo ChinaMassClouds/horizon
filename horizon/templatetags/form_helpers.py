@@ -56,10 +56,8 @@ def is_file(field):
 
 
 @register.filter
-def add_item_url(field):
-    if hasattr(field.field.widget, 'get_add_item_url'):
-        return field.field.widget.get_add_item_url()
-    return None
+def is_dynamic_select(field):
+    return hasattr(field.field.widget, 'add_item_link')
 
 
 @register.filter
@@ -67,4 +65,6 @@ def wrapper_classes(field):
     classes = []
     if is_multiple_checkbox(field):
         classes.append('multiple-checkbox')
+    if is_dynamic_select(field):
+        classes.append('dynamic-select')
     return ' '.join(classes)

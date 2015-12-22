@@ -15,6 +15,7 @@
 
 from django.utils.translation import ugettext_lazy as _
 
+
 from horizon import exceptions
 from horizon import forms
 from horizon import workflows
@@ -23,6 +24,7 @@ from openstack_dashboard.api import base
 from openstack_dashboard.api import cinder
 from openstack_dashboard.api import nova
 from openstack_dashboard.usage import quotas
+from openstack_dashboard.openstack.common.log import operate_log
 
 ALL_NOVA_QUOTA_FIELDS = quotas.NOVA_QUOTA_FIELDS + quotas.MISSING_QUOTA_FIELDS
 
@@ -95,6 +97,9 @@ class UpdateDefaultQuotas(workflows.Workflow):
                 cinder_data = dict([(key, data[key]) for key in
                                     quotas.CINDER_QUOTA_FIELDS])
                 cinder.default_quota_update(request, **cinder_data)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        "defaults update")
         except Exception:
             exceptions.handle(request, _('Unable to update default quotas.'))
         return True

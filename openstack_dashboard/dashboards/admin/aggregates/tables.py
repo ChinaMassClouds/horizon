@@ -13,13 +13,11 @@
 from django.template import defaultfilters as filters
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ungettext_lazy
-
 import six
-
 from horizon import tables
-
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.admin.aggregates import constants
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class DeleteAggregateAction(tables.DeleteAction):
@@ -42,6 +40,9 @@ class DeleteAggregateAction(tables.DeleteAction):
     def delete(self, request, obj_id):
         api.nova.aggregate_delete(request, obj_id)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class CreateAggregateAction(tables.LinkAction):
     name = "create"
@@ -49,6 +50,10 @@ class CreateAggregateAction(tables.LinkAction):
     url = constants.AGGREGATES_CREATE_URL
     classes = ("ajax-modal",)
     icon = "plus"
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 
 class ManageHostsAction(tables.LinkAction):
@@ -58,6 +63,9 @@ class ManageHostsAction(tables.LinkAction):
     classes = ("ajax-modal",)
     icon = "plus"
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class UpdateMetadataAction(tables.LinkAction):
     name = "update-metadata"
@@ -66,6 +74,9 @@ class UpdateMetadataAction(tables.LinkAction):
     classes = ("ajax-modal",)
     icon = "pencil"
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class UpdateAggregateAction(tables.LinkAction):
     name = "update"
@@ -73,6 +84,9 @@ class UpdateAggregateAction(tables.LinkAction):
     url = constants.AGGREGATES_UPDATE_URL
     classes = ("ajax-modal",)
     icon = "pencil"
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class AggregateFilterAction(tables.FilterAction):

@@ -25,6 +25,7 @@ from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.networks.ports import \
     tables as project_tables
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 LOG = logging.getLogger(__name__)
 
@@ -59,6 +60,9 @@ class DeletePort(policy.PolicyTargetMixin, tables.DeleteAction):
                                args=[network_id])
             exceptions.handle(request, msg, redirect=redirect)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class CreatePort(tables.LinkAction):
     name = "create"
@@ -72,6 +76,8 @@ class CreatePort(tables.LinkAction):
         network_id = self.table.kwargs['network_id']
         return reverse(self.url, args=(network_id,))
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 class UpdatePort(policy.PolicyTargetMixin, tables.LinkAction):
     name = "update"
@@ -112,3 +118,22 @@ class PortsTable(tables.DataTable):
                                          **kwargs)
         if not api.neutron.is_extension_supported(request, 'mac-learning'):
             del self.columns['mac_state']
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+        if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+            self.columns['actions'].attrs = {'class':'hide'}
+        return self.columns.values()

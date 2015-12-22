@@ -215,15 +215,13 @@ def get_disabled_quotas(request):
 
 
 @memoized
-def tenant_quota_usages(request, tenant_id=None):
-    """Get our quotas and construct our usage object."""
-
+def tenant_quota_usages(request):
+    # Get our quotas and construct our usage object.
     disabled_quotas = get_disabled_quotas(request)
 
     usages = QuotaUsage()
     for quota in get_tenant_quota_data(request,
-                                       disabled_quotas=disabled_quotas,
-                                       tenant_id=tenant_id):
+                                       disabled_quotas=disabled_quotas):
         usages.add_quota(quota)
 
     # Get our usages.
@@ -234,13 +232,7 @@ def tenant_quota_usages(request, tenant_id=None):
     except Exception:
         pass
     flavors = dict([(f.id, f) for f in nova.flavor_list(request)])
-
-    if tenant_id:
-        instances, has_more = nova.server_list(
-            request, search_opts={'tenant_id': tenant_id}, all_tenants=True)
-    else:
-        instances, has_more = nova.server_list(request)
-
+    instances, has_more = nova.server_list(request)
     # Fetch deleted flavors if necessary.
     missing_flavors = [instance.flavor['id'] for instance in instances
                        if instance.flavor['id'] not in flavors]
@@ -256,13 +248,8 @@ def tenant_quota_usages(request, tenant_id=None):
     usages.tally('floating_ips', len(floating_ips))
 
     if 'volumes' not in disabled_quotas:
-        if tenant_id:
-            opts = {'alltenants': 1, 'tenant_id': tenant_id}
-            volumes = cinder.volume_list(request, opts)
-            snapshots = cinder.volume_snapshot_list(request, opts)
-        else:
-            volumes = cinder.volume_list(request)
-            snapshots = cinder.volume_snapshot_list(request)
+        volumes = cinder.volume_list(request)
+        snapshots = cinder.volume_snapshot_list(request)
         usages.tally('gigabytes', sum([int(v.size) for v in volumes]))
         usages.tally('volumes', len(volumes))
         usages.tally('snapshots', len(snapshots))
@@ -279,6 +266,64 @@ def tenant_quota_usages(request, tenant_id=None):
 
     return usages
 
+# zhangdebo changed function tenant_quota_usages
+@memoized
+def tenant_quota_usages_with_projectid(request, project_id):
+    # Get our quotas and construct our usage object.
+    disabled_quotas = get_disabled_quotas(request)
+
+    usages = QuotaUsage()
+    for quota in get_tenant_quota_data(request,
+                                       disabled_quotas=disabled_quotas):
+        usages.add_quota(quota)
+
+    # Get our usages.
+    floating_ips = []
+    try:
+        if network.floating_ip_supported(request):
+            floating_ips = network.tenant_floating_ip_list(request)
+    except Exception:
+        pass
+    flavors = dict([(f.id, f) for f in nova.flavor_list(request)])
+    instances, has_more = nova.server_list(request, all_tenants = True)
+    
+    instances = [i for i in instances if i.tenant_id == project_id]
+    
+    # Fetch deleted flavors if necessary.
+    missing_flavors = [instance.flavor['id'] for instance in instances
+                       if instance.flavor['id'] not in flavors]
+    for missing in missing_flavors:
+        if missing not in flavors:
+            try:
+                flavors[missing] = nova.flavor_get(request, missing)
+            except Exception:
+                flavors[missing] = {}
+                exceptions.handle(request, ignore=True)
+
+    usages.tally('instances', len(instances))
+    usages.tally('floating_ips', len(floating_ips))
+
+    if 'volumes' not in disabled_quotas:
+        volumes = cinder.volume_list(request, search_opts={'all_tenants': True})
+        volumes = [v for v in volumes if getattr(v,'os-vol-tenant-attr:tenant_id','') == project_id]
+        volumes_ids = [v.id for v in volumes]
+        snapshots = cinder.volume_snapshot_list(request, search_opts={'all_tenants': True})
+        snapshots = [s for s in snapshots if s.volume_id in volumes_ids]
+        usages.tally('gigabytes', sum([int(v.size) for v in volumes]))
+        usages.tally('volumes', len(volumes))
+        usages.tally('snapshots', len(snapshots))
+
+    # Sum our usage based on the flavors of the instances.
+    for flavor in [flavors[instance.flavor['id']] for instance in instances]:
+        usages.tally('cores', getattr(flavor, 'vcpus', None))
+        usages.tally('ram', getattr(flavor, 'ram', None))
+
+    # Initialise the tally if no instances have been launched yet
+    if len(instances) == 0:
+        usages.tally('cores', 0)
+        usages.tally('ram', 0)
+
+    return usages
 
 def tenant_limit_usages(request):
     # TODO(licostan): This method shall be removed from Quota module.

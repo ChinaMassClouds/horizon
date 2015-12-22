@@ -31,6 +31,7 @@ from horizon.utils import validators as utils_validators
 
 from openstack_dashboard import api
 from openstack_dashboard.utils import filters
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 class CreateGroup(forms.SelfHandlingForm):
@@ -48,6 +49,9 @@ class CreateGroup(forms.SelfHandlingForm):
             sg = api.network.security_group_create(request,
                                                    data['name'],
                                                    data['description'])
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + " srcurity group create")
             messages.success(request,
                              _('Successfully created security group: %s')
                                % data['name'])
@@ -76,6 +80,9 @@ class UpdateGroup(forms.SelfHandlingForm):
                                                    data['id'],
                                                    data['name'],
                                                    data['description'])
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + "vsecurity update")
             messages.success(request,
                              _('Successfully updated security group: %s')
                                % data['name'])
@@ -380,6 +387,9 @@ class AddRule(forms.SelfHandlingForm):
                 data['security_group'])
             messages.success(request,
                              _('Successfully added rule: %s') % unicode(rule))
+            operate_log(request.user.username,
+                        request.user.roles,
+                        "srcurity group rule create")
             return rule
         except Exception:
             redirect = reverse("horizon:project:access_and_security:"

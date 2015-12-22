@@ -26,8 +26,9 @@ from openstack_dashboard.dashboards.identity import dashboard
 class Users(horizon.Panel):
     name = _("Users")
     slug = 'users'
-    policy_rules = (("identity", "identity:get_user"),
-                    ("identity", "identity:list_users"))
+    img = '/static/dashboard/img/nav/users1.png'
+   # policy_rules = (("identity", "identity:get_user"),
+   #                 ("identity", "identity:list_users"))
 
 
 dashboard.Identity.register(Users)

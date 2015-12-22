@@ -22,6 +22,7 @@ from horizon import tables
 from openstack_dashboard import api
 from openstack_dashboard import policy
 from openstack_dashboard.utils import filters
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 POLICY_CHECK = getattr(settings, "POLICY_CHECK_FUNCTION",
@@ -62,6 +63,13 @@ class DeleteGroup(policy.PolicyTargetMixin, tables.DeleteAction):
 
     def delete(self, request, obj_id):
         api.network.security_group_delete(request, obj_id)
+        name = "-"
+        for row in self.table.data:
+            if row.id == obj_id:
+                name = row.name
+        operate_log(request.user.username,
+                    request.user.roles,
+                    name + " security_groups delete")
 
 
 class CreateGroup(tables.LinkAction):
@@ -178,6 +186,9 @@ class DeleteRule(tables.DeleteAction):
 
     def delete(self, request, obj_id):
         api.network.security_group_rule_delete(request, obj_id)
+        operate_log(request.user.username,
+                    request.user.roles,
+                    "srcurity group rule delete")
 
     def get_success_url(self, request):
         sg_id = self.table.kwargs['security_group_id']

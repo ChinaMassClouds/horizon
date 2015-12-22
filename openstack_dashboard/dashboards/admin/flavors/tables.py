@@ -25,6 +25,7 @@ from django.utils.translation import ungettext_lazy
 from horizon import tables
 
 from openstack_dashboard import api
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class DeleteFlavor(tables.DeleteAction):
@@ -47,6 +48,9 @@ class DeleteFlavor(tables.DeleteAction):
     def delete(self, request, obj_id):
         api.nova.flavor_delete(request, obj_id)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class CreateFlavor(tables.LinkAction):
     name = "create"
@@ -54,6 +58,9 @@ class CreateFlavor(tables.LinkAction):
     url = "horizon:admin:flavors:create"
     classes = ("ajax-modal",)
     icon = "plus"
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class UpdateFlavor(tables.LinkAction):
@@ -152,3 +159,24 @@ class FlavorsTable(tables.DataTable):
                        ModifyAccess,
                        UpdateMetadata,
                        DeleteFlavor)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+       if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+           self.columns['multi_select'].attrs = {'class':'hide'}
+           self.columns['actions'].attrs = {'class':'hide'}
+       return self.columns.values()

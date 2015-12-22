@@ -64,6 +64,8 @@ class AdminHypervisorsTable(tables.DataTable):
         verbose_name = _("Hypervisors")
 
 
+
+
 class AdminHypervisorInstancesTable(tables.DataTable):
     name = tables.Column("name",
                          link=("horizon:admin:instances:detail"),
@@ -78,3 +80,4 @@ class AdminHypervisorInstancesTable(tables.DataTable):
     class Meta:
         name = "hypervisor_instances"
         verbose_name = _("Hypervisor Instances")
+

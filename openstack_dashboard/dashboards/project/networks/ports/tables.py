@@ -20,6 +20,7 @@ from horizon import tables
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 def get_fixed_ips(port):
@@ -48,6 +49,9 @@ class UpdatePort(policy.PolicyTargetMixin, tables.LinkAction):
     def get_link_url(self, port):
         network_id = self.table.kwargs['network_id']
         return reverse(self.url, args=(network_id, port.id))
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class PortsTable(tables.DataTable):

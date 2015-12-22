@@ -15,6 +15,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from horizon import tables
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class QuotaFilterAction(tables.FilterAction):
@@ -34,6 +35,8 @@ class UpdateDefaultQuotas(tables.LinkAction):
     verbose_name = _("Update Defaults")
     url = "horizon:admin:defaults:update_defaults"
     classes = ("ajax-modal", "btn-edit")
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 def get_quota_name(quota):

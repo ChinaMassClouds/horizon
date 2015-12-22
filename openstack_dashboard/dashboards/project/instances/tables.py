@@ -27,24 +27,27 @@ from django.utils.translation import pgettext_lazy
 from django.utils.translation import string_concat  # noqa
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ungettext_lazy
-
 from horizon import conf
 from horizon import exceptions
 from horizon import messages
 from horizon import tables
 from horizon.templatetags import sizeformat
 from horizon.utils import filters
+from openstack_dashboard.openstack.common.log import policy_is
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.access_and_security.floating_ips \
     import workflows
 from openstack_dashboard.dashboards.project.instances import tabs
-from openstack_dashboard.dashboards.project.instances.workflows \
-    import resize_instance
+from openstack_dashboard.dashboards.project.applyhost.workflows import resize_instance
 from openstack_dashboard.dashboards.project.instances.workflows \
     import update_instance
 from openstack_dashboard import policy
-
+from openstack_dashboard.openstack.common.log import operate_log
+from openstack_dashboard.openstack.common.choices import CHOICES_VIRTUAL_TYPE
+from openstack_dashboard.openstack.common import choices
+from openstack_dashboard.openstack.common.requestapi import RequestApi,def_vcenter_vms,def_cserver_vms
+from openstack_dashboard.dashboards.admin.controlcenter import views as controlcenter_views
 
 LOG = logging.getLogger(__name__)
 
@@ -70,6 +73,7 @@ UNPAUSE = 1
 SUSPEND = 0
 RESUME = 1
 
+CHOICES_VIRTUAL_TYPE_NAME = [i[1] for i in CHOICES_VIRTUAL_TYPE]
 
 def is_deleting(instance):
     task_state = getattr(instance, "OS-EXT-STS:task_state", None)
@@ -82,7 +86,6 @@ class TerminateInstance(policy.PolicyTargetMixin, tables.BatchAction):
     name = "terminate"
     classes = ("btn-danger",)
     icon = "off"
-    policy_rules = (("compute", "compute:delete"),)
 
     @staticmethod
     def action_present(count):
@@ -102,10 +105,28 @@ class TerminateInstance(policy.PolicyTargetMixin, tables.BatchAction):
 
     def allowed(self, request, instance=None):
         """Allow terminate action if instance not currently being deleted."""
-        return not is_deleting(instance)
+        if request.user.username in ['auditadmin','appradmin']:
+            return False
+        roles = request.user.roles
+        if len(roles)>=2:
+            role = roles[1]['name'] if roles[0]['name']=='_member_' else roles[0]['name']
+        else:
+            role = '_member_'
+        return  policy_is(request.user.username, 'admin', 'sysadmin') or role!='admin'
 
     def action(self, request, obj_id):
-        api.nova.server_delete(request, obj_id)
+        try:
+            api.nova.server_delete(request, obj_id)
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " instance delete")
+        except Exception:
+            exceptions.handle(request, _("Unable to delete instance."))
+
 
 
 class RebootInstance(policy.PolicyTargetMixin, tables.BatchAction):
@@ -138,8 +159,17 @@ class RebootInstance(policy.PolicyTargetMixin, tables.BatchAction):
             return True
 
     def action(self, request, obj_id):
-        api.nova.server_reboot(request, obj_id, soft_reboot=False)
-
+        try:
+            api.nova.server_reboot(request, obj_id, soft_reboot=False)
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " instance reboot")
+        except Exception as e:
+            LOG.error('Error to RebootInstance: %s' % str(e))
 
 class SoftRebootInstance(RebootInstance):
     name = "soft_reboot"
@@ -161,7 +191,17 @@ class SoftRebootInstance(RebootInstance):
         )
 
     def action(self, request, obj_id):
-        api.nova.server_reboot(request, obj_id, soft_reboot=True)
+        try:
+            api.nova.server_reboot(request, obj_id, soft_reboot=True)
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " instance soft reboot")
+        except Exception as e:
+            LOG.error('Error to SoftRebootInstance: %s' % str(e))
 
 
 class TogglePause(tables.BatchAction):
@@ -223,13 +263,29 @@ class TogglePause(tables.BatchAction):
                 and not is_deleting(instance))
 
     def action(self, request, obj_id):
-        if self.paused:
-            api.nova.server_unpause(request, obj_id)
-            self.current_past_action = UNPAUSE
-        else:
-            api.nova.server_pause(request, obj_id)
-            self.current_past_action = PAUSE
-
+        try:
+            if self.paused:
+                api.nova.server_unpause(request, obj_id)
+                self.current_past_action = UNPAUSE
+                name = '-'
+                for row in self.table.data:
+                    if row.id == obj_id:
+                        name = row.name
+                operate_log(request.user.username,
+                            request.user.roles,
+                            name + " instance unpause")
+            else:
+                api.nova.server_pause(request, obj_id)
+                self.current_past_action = PAUSE
+                name = '-'
+                for row in self.table.data:
+                    if row.id == obj_id:
+                        name = row.name
+                operate_log(request.user.username,
+                            request.user.roles,
+                            name + "instance pause")
+        except Exception as e:
+            LOG.error('Error to TogglePause: %s' % str(e))
 
 class ToggleSuspend(tables.BatchAction):
     name = "suspend"
@@ -290,12 +346,29 @@ class ToggleSuspend(tables.BatchAction):
                 and not is_deleting(instance))
 
     def action(self, request, obj_id):
-        if self.suspended:
-            api.nova.server_resume(request, obj_id)
-            self.current_past_action = RESUME
-        else:
-            api.nova.server_suspend(request, obj_id)
-            self.current_past_action = SUSPEND
+        try:
+            if self.suspended:
+                api.nova.server_resume(request, obj_id)
+                self.current_past_action = RESUME
+                name = '-'
+                for row in self.table.data:
+                    if row.id == obj_id:
+                        name = row.name
+                operate_log(request.user.username,
+                            request.user.roles,
+                            name + " instance resume")
+            else:
+                api.nova.server_suspend(request, obj_id)
+                self.current_past_action = SUSPEND
+                name = '-'
+                for row in self.table.data:
+                    if row.id == obj_id:
+                        name = row.name
+                operate_log(request.user.username,
+                            request.user.roles,
+                            name + " instance suspend")
+        except Exception as e:
+            LOG.error('Error to ToggleSuspend: %s' % str(e))
 
 
 class LaunchLink(tables.LinkAction):
@@ -334,8 +407,8 @@ class LaunchLink(tables.LinkAction):
         except Exception:
             LOG.exception("Failed to retrieve quota information")
             # If we can't get the quota information, leave it to the
-            # API to check when launching
-        return True  # The action should always be displayed
+            # API to check  when launching
+        return policy_is(request.user.username, 'admin')
 
     def single(self, table, request, object_id=None):
         self.allowed(request, None)
@@ -388,7 +461,9 @@ class CreateSnapshot(policy.PolicyTargetMixin, tables.LinkAction):
 
     def allowed(self, request, instance=None):
         return instance.status in SNAPSHOT_READY_STATES \
-            and not is_deleting(instance)
+            and not is_deleting(instance) \
+            and getattr(instance, 'virtualplatformtype','') \
+            and instance.virtualplatformtype not in CHOICES_VIRTUAL_TYPE_NAME
 
 
 class ConsoleLink(policy.PolicyTargetMixin, tables.LinkAction):
@@ -403,6 +478,7 @@ class ConsoleLink(policy.PolicyTargetMixin, tables.LinkAction):
         # not set at all, or if it's set to any value other than None or False.
         return bool(getattr(settings, 'CONSOLE_TYPE', True)) and \
             instance.status in ACTIVE_STATES and not is_deleting(instance)
+
 
     def get_link_url(self, datum):
         base_url = super(ConsoleLink, self).get_link_url(datum)
@@ -464,6 +540,10 @@ class ConfirmResize(policy.PolicyTargetMixin, tables.Action):
     def single(self, table, request, instance):
         api.nova.server_confirm_resize(request, instance)
 
+        operate_log(request.user.username,
+                    request.user.roles,
+                    instance.name + " instance confirm resize")
+
 
 class RevertResize(policy.PolicyTargetMixin, tables.Action):
     name = "revert"
@@ -476,7 +556,9 @@ class RevertResize(policy.PolicyTargetMixin, tables.Action):
 
     def single(self, table, request, instance):
         api.nova.server_revert_resize(request, instance)
-
+        operate_log(request.user.username,
+                    request.user.roles,
+                    instance.name + " instance revert resize")
 
 class RebuildInstance(policy.PolicyTargetMixin, tables.LinkAction):
     name = "rebuild"
@@ -638,20 +720,101 @@ def get_instance_error(instance):
 class UpdateRow(tables.Row):
     ajax = True
 
-    def get_data(self, request, instance_id):
-        instance = api.nova.server_get(request, instance_id)
+    def get_vcenter_uuid_maps_info(self):
         try:
-            instance.full_flavor = api.nova.flavor_get(request,
-                                                       instance.flavor["id"])
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/vcenter/uuid_maps') or []
+            return uuid_maps
         except Exception:
-            exceptions.handle(request,
-                              _('Unable to retrieve flavor information '
-                                'for instance "%s".') % instance_id,
-                              ignore=True)
-        error = get_instance_error(instance)
-        if error:
-            messages.error(request, error)
-        return instance
+            return {}
+
+    def get_cserver_uuid_maps_info(self):
+        try:
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/cserver/uuid_maps') or []
+            return uuid_maps
+        except Exception:
+            return {}
+        
+    def get_heterogeneous_plat(self, request):
+        try:
+            zarr = []
+            heterogeneous_plat = controlcenter_views.get_heterogeneous_plat(request)
+            for i in heterogeneous_plat:
+                zarr.append((i.domain_name,i.virtualplatformtype,i.name))
+            return zarr
+        except Exception as e:
+            LOG.error(str(e))
+            return []
+        
+    def get_data(self, request, instance_id):
+        try:
+            instance = api.nova.server_get(request, instance_id)
+            instance.virtualplatformtype = 'Openstack'
+            error = get_instance_error(instance)
+            if error:
+                messages.error(request, error)
+                
+            if instance.metadata and instance.metadata.get('platformtype'):
+                instance.virtualplatformtype = instance.metadata.get('platformtype')
+                if instance.virtualplatformtype == 'vcenter':
+                    setattr(instance,'OS-EXT-SRV-ATTR:host','-')
+                    zarr = self.get_heterogeneous_plat(request)
+                    plat_vms = []
+                    for i in zarr:
+                        if i[0] == getattr(instance,'OS-EXT-AZ:availability_zone',''):
+                            plat_vms = def_vcenter_vms(i[2])
+                            break
+                    for v in plat_vms:
+                        if v.get('id') == instance.id:
+                            setattr(instance,'OS-EXT-SRV-ATTR:host',v.get('host'))
+                elif instance.virtualplatformtype == 'cserver':
+                    setattr(instance,'OS-EXT-SRV-ATTR:host','-')
+                    zarr = self.get_heterogeneous_plat(request)
+                    plat_vms = []
+                    for i in zarr:
+                        if i[0] == getattr(instance,'OS-EXT-AZ:availability_zone',''):
+                            plat_vms = def_cserver_vms(i[2])
+                            break
+                    for v in plat_vms:
+                        if v.get('openstack_uuid') == instance.id:
+                            setattr(instance,'OS-EXT-SRV-ATTR:host',v.get('hostname'))
+    
+            if getattr(instance,'virtualplatformtype','') == 'vcenter':
+                vcenter_uuid_maps_info = self.get_vcenter_uuid_maps_info()
+                if vcenter_uuid_maps_info.get(instance.id):
+                    flavor_id = vcenter_uuid_maps_info.get(instance.id).get('flavor_id') or instance.flavor['id']
+                    for i in instance.addresses.keys():
+                        for j in instance.addresses[i]:
+                            j['addr'] = vcenter_uuid_maps_info.get(instance.id).get('ip') or ''
+                else:
+                    flavor_id = instance.flavor['id']
+                    for i in instance.addresses.keys():
+                        for j in instance.addresses[i]:
+                            j['addr'] = ''
+            elif getattr(instance,'virtualplatformtype','') == 'cserver':
+                cserver_uuid_maps_info = self.get_cserver_uuid_maps_info()
+                if cserver_uuid_maps_info.get(instance.id):
+                    flavor_id = cserver_uuid_maps_info.get(instance.id).get('flavor_id') or ''
+                    for i in instance.addresses.keys():
+                        for j in instance.addresses[i]:
+                            j['addr'] = cserver_uuid_maps_info.get(instance.id).get('ip') or ''
+                else:
+                    flavor_id = ''
+                    for i in instance.addresses.keys():
+                        for j in instance.addresses[i]:
+                            j['addr'] = ''
+            else:
+                flavor_id = instance.flavor["id"]
+                
+            if flavor_id:
+                instance.full_flavor = api.nova.flavor_get(request,flavor_id)
+                
+            if getattr(instance,'virtualplatformtype',''):
+                instance.virtualplatformtype = choices.translate(choices.CHOICES_VIRTUAL_TYPE,instance.virtualplatformtype) 
+            return instance
+        except Exception as e:
+            LOG.error(str(e))
 
 
 class StartInstance(policy.PolicyTargetMixin, tables.BatchAction):
@@ -678,7 +841,17 @@ class StartInstance(policy.PolicyTargetMixin, tables.BatchAction):
         return instance.status in ("SHUTDOWN", "SHUTOFF", "CRASHED")
 
     def action(self, request, obj_id):
-        api.nova.server_start(request, obj_id)
+        try:
+            api.nova.server_start(request, obj_id)
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " instance start")
+        except Exception as e:
+            LOG.error('Error to StartInstance: %s' % str(e))
 
 
 class StopInstance(policy.PolicyTargetMixin, tables.BatchAction):
@@ -710,7 +883,25 @@ class StopInstance(policy.PolicyTargetMixin, tables.BatchAction):
                 and not is_deleting(instance))
 
     def action(self, request, obj_id):
-        api.nova.server_stop(request, obj_id)
+        try:
+            api.nova.server_stop(request, obj_id)
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " instance stop")
+        except Exception as e:
+            LOG.error('Error to StopInstance: %s' % str(e))
+            status = ''
+            for row in self.table.data:
+                if row.id == obj_id:
+                    status = row.status
+                    break
+            if status == 'SUSPENDED':
+                messages.error(request, _('Instance in vm_state suspended. Cannot stop while the instance is in this state.'))
+                raise
 
 
 def get_ips(instance):
@@ -906,6 +1097,8 @@ class InstancesTable(tables.DataTable):
                            display_choices=STATUS_DISPLAY_CHOICES)
     az = tables.Column("availability_zone",
                        verbose_name=_("Availability Zone"))
+    virtualplatformtype = tables.Column("virtualplatformtype",
+                       verbose_name=_("Virtual Platform Type"))
     task = tables.Column("OS-EXT-STS:task_state",
                          verbose_name=_("Task"),
                          filters=(title, filters.replace_underscores),

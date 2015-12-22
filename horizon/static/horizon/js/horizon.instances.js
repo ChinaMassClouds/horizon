@@ -221,14 +221,153 @@ horizon.addInitFunction(function () {
 
     $("#id_volume_size").val(volume_size);
   }
+  
+  function my_update_device_size(){
+	  var flavor_table = $('.workflow .flavor_table');
+	  var set_flavor_table_visible = function(is_cserver){
+		  flavor_table.find('#flavor_os').closest('tr').toggle(is_cserver);
+		  flavor_table.find('#flavor_name').closest('tr').toggle(!is_cserver);
+		  flavor_table.find('#flavor_disk').closest('tr').toggle(!is_cserver);
+		  flavor_table.find('#flavor_ephemeral').closest('tr').toggle(!is_cserver);
+		  flavor_table.find('#flavor_disk_total').closest('tr').toggle(!is_cserver);
+	  }
+	  var clear_flavor_table_val = function(){
+		  flavor_table.find('#flavor_os').html('');
+		  flavor_table.find('#flavor_name').html('');
+		  flavor_table.find('#flavor_disk').html('');
+		  flavor_table.find('#flavor_ephemeral').html('');
+		  flavor_table.find('#flavor_disk_total').html('');
+		  flavor_table.find('#flavor_vcpus').html('');
+		  flavor_table.find('#flavor_ram').html('');
+	  }
+	  if($('.workflow #id_template_id').is(':visible')) {
+		  clear_flavor_table_val();
+		  var availability_zone_info = $('.workflow #id_availability_zone_info').val();
+		  var json_availability_zone_info = JSON.parse(availability_zone_info);
+		  if( ! json_availability_zone_info) return;
+		  var zone = $('.workflow #id_availability_zone').val();
+		  var template_id_obj = $('.workflow #id_template_id');
+		  var template_id = template_id_obj.val();
+		  var templates = json_availability_zone_info[zone]['templates'];
+		  set_flavor_table_visible(true);
+		  for(var i = 0; i < templates.length; i ++){
+			  var template = templates[i];
+			  if(template_id == template['id']){
+				  var os = template['os_type'];
+				  var cpu = template['cpu'];
+				  var memory = template['memory'];
+				  flavor_table.find('#flavor_os').html(os);
+				  flavor_table.find('#flavor_vcpus').html(cpu);
+				  flavor_table.find('#flavor_ram').html(memory);
+				  $('.workflow #id_flavor_vcpus').val(cpu);
+				  $('.workflow #id_flavor_ram').val(memory);
+			  }
+		  }
+	  }else{
+		  set_flavor_table_visible(false);
+		  update_device_size();
+	  }
+  }
 
   $(document).on('change', '.workflow #id_flavor', function (evt) {
-    update_device_size();
+	  if(!$('.workflow #id_template_id').is(':visible'))
+		  update_device_size();
   });
 
   $(document).on('change', '.workflow #id_image_id', function (evt) {
-    update_device_size();
+	  if(!$('.workflow #id_template_id').is(':visible'))
+		  update_device_size();
   });
+  
+  $(document).on('change', '.workflow #id_template_id', function (evt) {
+    my_update_device_size();
+  });
+  
+  	/** zhangdebo 2015年10月31日 */
+	function zone_onchange(){
+		var zone = $('.workflow #id_availability_zone').val();
+		var template_id_obj = $('.workflow #id_template_id');
+		var cluster_id_obj = $('.workflow #id_cluster_id');
+		var flavor_obj = $('.workflow #id_flavor');
+		var source_type_obj = $('.workflow #id_source_type');
+		var image_id_obj = $('.workflow #id_image_id');
+		cluster_id_obj.find('option').remove();
+		var not_cserver = function(){
+			template_id_obj.closest('.form-group ').hide();
+			cluster_id_obj.closest('.form-group ').hide();
+			flavor_obj.closest('.form-group ').show();
+			source_type_obj.closest('.form-group ').show();
+			if(source_type_obj.children(":selected").val() == 'image_id'){
+				image_id_obj.closest('.form-group ').show();
+			}
+		};
+		var is_cserver = function(){
+			template_id_obj.closest('.form-group ').show();
+			cluster_id_obj.closest('.form-group ').show();
+			flavor_obj.closest('.form-group ').hide();
+			source_type_obj.closest('.form-group ').hide();
+			image_id_obj.closest('.form-group ').hide();
+			source_type_obj.find('option[value="image_id"]').attr('selected',true);
+		};
+		if(!zone) {
+			not_cserver();
+		}else{
+			var availability_zone_info = $('.workflow #id_availability_zone_info').val();
+			if(!availability_zone_info){
+				not_cserver();
+			}
+			var json_info = JSON.parse(availability_zone_info);
+			if(json_info[zone] && json_info[zone]['vtype'] == 'cserver'){
+				for(var i = 0; i < json_info[zone]['clusters'].length; i ++ ){
+					var id = json_info[zone]['clusters'][i]['id'];
+					var name = json_info[zone]['clusters'][i]['name'];
+					cluster_id_obj.append($('<option value="' + id + '">' + name + '</option>'));
+				}
+				is_cserver();
+			}else{
+				not_cserver();
+			}
+		}
+	}
+	function cluster_onchange(){
+		var zone = $('.workflow #id_availability_zone').val();
+		var template_id_obj = $('.workflow #id_template_id');
+		var availability_zone_info = $('.workflow #id_availability_zone_info').val();
+		var json_info = JSON.parse(availability_zone_info);
+		var cluster_id_obj = $('.workflow #id_cluster_id');
+		var cluster_id = cluster_id_obj.val();
+		template_id_obj.find('option').remove();
+		if(json_info[zone] && json_info[zone]['vtype'] == 'cserver'){
+			for(var i = 0; i < json_info[zone]['templates'].length; i ++ ){
+				var cid = json_info[zone]['templates'][i]['cluster_id'];
+				if(cid == cluster_id){
+					var id = json_info[zone]['templates'][i]['id'];
+					var name = json_info[zone]['templates'][i]['name'];
+					template_id_obj.append($('<option value="' + id + '">' + name + '</option>'));
+				}
+			}
+		}
+	}
+	/** zhangdebo 2015年10月31日 */
+	$(document).on('change', '.workflow #id_availability_zone', function (evt) {
+		zone_onchange();
+		cluster_onchange();
+		my_update_device_size();
+	});
+	$(document).on('focus', '.workflow #id_availability_zone', function (evt) {
+		zone_onchange();
+		cluster_onchange();
+		my_update_device_size();
+	});
+	$(document).on('change', '.workflow #id_cluster_id', function (evt) {
+		cluster_onchange();
+		my_update_device_size();
+	});
+	$(document).on('focus', '.workflow #id_cluster_id', function (evt) {
+		cluster_onchange();
+		my_update_device_size();
+	});
+  
 
   horizon.instances.decrypt_password = function(encrypted_password, private_key) {
     var crypt = new JSEncrypt();

@@ -20,6 +20,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Volumes(horizon.Panel):
     name = _("Volumes")
     slug = "volumes"
+    img = '/static/dashboard/img/nav/volumes1.png'
     permissions = ('openstack.services.volume',)
 
 

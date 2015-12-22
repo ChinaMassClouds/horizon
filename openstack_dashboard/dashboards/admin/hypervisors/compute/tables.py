@@ -13,7 +13,7 @@
 from django.template import defaultfilters as filters
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ungettext_lazy
-
+from openstack_dashboard.openstack.common.log import policy_is
 from horizon import tables
 from horizon.utils import filters as utils_filters
 
@@ -57,8 +57,7 @@ class EvacuateHost(tables.LinkAction):
 class ComputeHostFilterAction(tables.FilterAction):
     def filter(self, table, services, filter_string):
         q = filter_string.lower()
-
-        return filter(lambda service: q in service.type.lower(), services)
+        return filter(lambda service: q in service.host.lower(), services)
 
 
 class ComputeHostTable(tables.DataTable):
@@ -80,3 +79,22 @@ class ComputeHostTable(tables.DataTable):
         table_actions = (ComputeHostFilterAction,)
         multi_select = False
         row_actions = (EvacuateHost,)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+       if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+           self.columns['actions'].attrs = {'class':'hide'}
+       return self.columns.values()

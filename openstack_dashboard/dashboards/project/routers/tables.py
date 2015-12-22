@@ -25,6 +25,7 @@ from horizon import messages
 from horizon import tables
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import operate_log
 
 LOG = logging.getLogger(__name__)
 
@@ -54,6 +55,9 @@ class DeleteRouter(policy.PolicyTargetMixin, tables.DeleteAction):
         name = self.table.get_object_display(obj)
         try:
             api.neutron.router_delete(request, obj_id)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " router delete")
         except q_ext.NeutronClientException as e:
             msg = _('Unable to delete router "%s"') % e
             LOG.info(msg)

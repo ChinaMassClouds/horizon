@@ -6,16 +6,15 @@
 # LIU Yulong <dragon889@163.com>, 2014
 # Tom Fifield <tom@openstack.org>, 2014
 # Tony Fu <tfu@redhat.com>, 2014
-# Xiao Xi LIU <liuxx@cn.ibm.com>, 2014
 # Ying Chun Guo <daisy.ycguo@gmail.com>, 2014
 # 颜海峰 <yanheven@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: Horizon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-02 00:51-0600\n"
-"PO-Revision-Date: 2014-11-18 06:50+0000\n"
-"Last-Translator: Xiao Xi LIU <liuxx@cn.ibm.com>\n"
+"POT-Creation-Date: 2014-10-05 14:55+0000\n"
+"PO-Revision-Date: 2014-10-04 04:45+0000\n"
+"Last-Translator: Ying Chun Guo <daisy.ycguo@gmail.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/horizon/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -23,7 +22,7 @@ msgstr ""
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: base.py:454 templates/horizon/common/_modal_form_update_metadata.html:38
+#: base.py:454
 msgid "Other"
 msgstr "其它"
 
@@ -39,7 +38,7 @@ msgstr "您无权访问 %s"
 #: exceptions.py:163
 #, python-format
 msgid "A %(resource)s with the name \"%(name)s\" already exists."
-msgstr "已经存在一个名为\"%(name)s\"的资源%(resource)s。"
+msgstr "已经存在一个资源%(resource)s名称为\"%(name)s\"。"
 
 #: exceptions.py:287
 #, python-format
@@ -92,8 +91,6 @@ msgstr "取消"
 #: tables/actions.py:460
 #: templates/horizon/common/_data_table_table_actions.html:16
 #: templates/horizon/common/_data_table_table_actions.html:26
-#: templates/horizon/common/_modal_form_update_metadata.html:28
-#: templates/horizon/common/_modal_form_update_metadata.html:101
 #: templates/horizon/common/_workflow_step_update_members.html:12
 #: templates/horizon/common/_workflow_step_update_members.html:21
 msgid "Filter"
@@ -136,7 +133,7 @@ msgstr "删除"
 
 #: tables/actions.py:900
 msgid "Deleted"
-msgstr "已删除"
+msgstr "删除"
 
 #: tables/actions.py:931
 msgid "Update"
@@ -163,7 +160,7 @@ msgstr "动作"
 #: tables/base.py:1302
 #, python-format
 msgid "No match returned for the id \"%s\"."
-msgstr "id \"%s\" 没有匹配的返回顶。"
+msgstr "id \"%s\" 没有匹配的返回顶"
 
 #: tables/base.py:1453
 msgid "Please select a row before taking that action."
@@ -233,11 +230,11 @@ msgstr[0] "显示 %(counter)s 个条目"
 
 #: templates/horizon/common/_data_table.html:68
 msgid "&laquo;&nbsp;Prev"
-msgstr "&laquo;&nbsp;前页"
+msgstr "&laquo;&nbsp;向前"
 
 #: templates/horizon/common/_data_table.html:71
 msgid "Next&nbsp;&raquo;"
-msgstr "后页&nbsp;&raquo;"
+msgstr "下一页&nbsp;&raquo;"
 
 #: templates/horizon/common/_data_table_table_actions.html:38
 msgid "More Actions"
@@ -268,7 +265,7 @@ msgstr "<span> %(available)s </span>中的<span> %(used)s </span>已使用"
 
 #: templates/horizon/common/_limit_summary.html:14
 msgid "VCPUs"
-msgstr "虚拟处理器（VCPU）"
+msgstr "虚拟内核"
 
 #: templates/horizon/common/_limit_summary.html:21
 msgid "RAM"
@@ -298,7 +295,7 @@ msgid ""
 "        dictionary or you can use the \"Other\" option using a key of\n"
 "        your choice.\n"
 "      "
-msgstr "\n你可以通过从左边栏目目录中选取并移至右边栏目\n来指定元数据。你可以选择已添加至glance目录字典\n中的现成元数据，也可以使用\"其他\"选项来自定义\n元数据。"
+msgstr "\n你可以通过从左边栏目目录选择到右边栏目来指定matadata.你可以选择增加matadata到glance目录或者使用\"其他\"选项来做出你的选择"
 
 #: templates/horizon/common/_modal_form_update_metadata.html:26
 msgid "Available Metadata"
@@ -329,7 +326,7 @@ msgid ""
 "          definitions from the Glance Metadata Catalog. Use the \"Other\" option\n"
 "          to add metadata with the key of your choice.\n"
 "        "
-msgstr "\n你可以通过从左边栏目目录中选取并移至右边栏目\n来指定资源的元数据。在左边栏目中是按照\nGlance元数据目录来定义的元数据。使用\"其他\"选项\n来增加你自定的元数据。"
+msgstr "\n你可以通过从左边栏目目录选择到右边栏目来指定资源的元数据.在左边栏目是按照glance 元数据目录来定义的元数据.使用\"其他\"选项来增加你的选择"
 
 #: templates/horizon/common/_modal_form_update_metadata.html:238
 #: workflows/base.py:594
@@ -354,7 +351,7 @@ msgstr "使用情况摘要"
 
 #: templates/horizon/common/_usage_summary.html:7
 msgid "Select a period of time to query its usage"
-msgstr "选择一段时间来查询其用量"
+msgstr "选择的一段时间来查询其用量"
 
 #: templates/horizon/common/_usage_summary.html:9
 #, python-format
@@ -372,7 +369,7 @@ msgstr "\n<label>到:</label>%(end)s"
 
 #: templates/horizon/common/_usage_summary.html:17
 msgid "The date should be in YYYY-mm-dd format."
-msgstr "日期应是YYYY-mm-dd格式。"
+msgstr "日期采是YYYY-mm-dd格式。"
 
 #: templates/horizon/common/_usage_summary.html:20
 msgid "Active Instances"
@@ -498,9 +495,9 @@ msgstr "没有成员。"
 #: workflows/base.py:595
 #, python-format
 msgid "%s completed successfully."
-msgstr "%s 成功完成。"
+msgstr "%s 成功完成"
 
 #: workflows/base.py:596
 #, python-format
 msgid "%s did not complete."
-msgstr "%s 没有完成。"
+msgstr "%s 没有完成"

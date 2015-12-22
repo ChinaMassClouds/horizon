@@ -32,6 +32,10 @@ from openstack_dashboard.api import cinder
 from openstack_dashboard.api import keystone
 from openstack_dashboard.api import nova
 from openstack_dashboard.usage import quotas
+from openstack_dashboard.openstack.common.log import operate_log
+import logging
+
+LOG = logging.getLogger(__name__)
 
 INDEX_URL = "horizon:identity:projects:index"
 ADD_USER_URL = "horizon:identity:projects:create_user"
@@ -40,7 +44,9 @@ PROJECT_USER_MEMBER_SLUG = "update_members"
 PROJECT_GROUP_MEMBER_SLUG = "update_group_members"
 
 
-class ProjectQuotaAction(workflows.Action):
+class UpdateProjectQuotaAction(workflows.Action):
+    project_id = forms.CharField(widget=forms.HiddenInput,required = False)
+    
     ifcb_label = _("Injected File Content (Bytes)")
     metadata_items = forms.IntegerField(min_value=-1,
                                         label=_("Metadata Items"))
@@ -74,21 +80,27 @@ class ProjectQuotaAction(workflows.Action):
     subnet = forms.IntegerField(min_value=-1, label=_("Subnets"))
 
     def __init__(self, request, *args, **kwargs):
-        super(ProjectQuotaAction, self).__init__(request,
-                                                 *args,
-                                                 **kwargs)
+        super(UpdateProjectQuotaAction, self).__init__(request,
+                                                       *args,
+                                                       **kwargs)
+        
+        self.fields['project_id'].initial = self.initial.get('project_id')
+        
         disabled_quotas = quotas.get_disabled_quotas(request)
         for field in disabled_quotas:
             if field in self.fields:
                 self.fields[field].required = False
                 self.fields[field].widget = forms.HiddenInput()
 
+    class Meta:
+        name = _("Quota")
+        slug = 'update_quotas'
+        help_text = _("Set maximum quotas for the project.")
 
-class UpdateProjectQuotaAction(ProjectQuotaAction):
     def clean(self):
         cleaned_data = super(UpdateProjectQuotaAction, self).clean()
-        usages = quotas.tenant_quota_usages(
-            self.request, tenant_id=self.initial['project_id'])
+        usages = quotas.tenant_quota_usages_with_projectid(self.request, cleaned_data.get('project_id'))
+
         # Validate the quota values before updating quotas.
         bad_values = []
         for key, value in cleaned_data.items():
@@ -105,27 +117,9 @@ class UpdateProjectQuotaAction(ProjectQuotaAction):
             raise forms.ValidationError(msg)
         return cleaned_data
 
-    class Meta:
-        name = _("Quota")
-        slug = 'update_quotas'
-        help_text = _("Set maximum quotas for the project.")
-
-
-class CreateProjectQuotaAction(ProjectQuotaAction):
-    class Meta:
-        name = _("Quota")
-        slug = 'create_quotas'
-        help_text = _("Set maximum quotas for the project.")
-
 
 class UpdateProjectQuota(workflows.Step):
     action_class = UpdateProjectQuotaAction
-    depends_on = ("project_id",)
-    contributes = quotas.QUOTA_FIELDS
-
-
-class CreateProjectQuota(workflows.Step):
-    action_class = CreateProjectQuotaAction
     depends_on = ("project_id",)
     contributes = quotas.QUOTA_FIELDS
 
@@ -207,6 +201,11 @@ class UpdateProjectMembersAction(workflows.MembershipAction):
         try:
             all_users = api.keystone.user_list(request,
                                                domain=domain_id)
+            i = 0
+            for user in all_users:
+                if user.username=='syncadmin':
+                    del all_users[i]
+                i+=1
         except Exception:
             exceptions.handle(request, err_msg)
         users_list = [(user.id, user.name) for user in all_users]
@@ -215,6 +214,11 @@ class UpdateProjectMembersAction(workflows.MembershipAction):
         role_list = []
         try:
             role_list = api.keystone.role_list(request)
+          #  i = 0
+          #  for role in role_list:
+          #      if role.name == 'admin':
+          #          del role_list[i]
+          #      i += 1
         except Exception:
             exceptions.handle(request,
                               err_msg,
@@ -372,11 +376,10 @@ class CreateProject(workflows.Workflow):
     name = _("Create Project")
     finalize_button_name = _("Create Project")
     success_message = _('Created new project "%s".')
-    failure_message = _('Unable to create project "%s".')
     success_url = "horizon:identity:projects:index"
     default_steps = (CreateProjectInfo,
                      UpdateProjectMembers,
-                     CreateProjectQuota)
+                     UpdateProjectQuota)
 
     def __init__(self, request=None, context_seed=None, entry_point=None,
                  *args, **kwargs):
@@ -384,7 +387,7 @@ class CreateProject(workflows.Workflow):
             self.default_steps = (CreateProjectInfo,
                                   UpdateProjectMembers,
                                   UpdateProjectGroups,
-                                  CreateProjectQuota)
+                                  UpdateProjectQuota)
         super(CreateProject, self).__init__(request=request,
                                             context_seed=context_seed,
                                             entry_point=entry_point,
@@ -404,6 +407,10 @@ class CreateProject(workflows.Workflow):
                                                      description=desc,
                                                      enabled=data['enabled'],
                                                      domain=domain_id)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"]+" create tenant")
+
         except Exception:
             exceptions.handle(request, ignore=True)
             return False
@@ -564,6 +571,9 @@ class UpdateProject(workflows.Workflow):
                 description=data['description'],
                 enabled=data['enabled'])
             # Use the domain_id from the project if available
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"]+" tenant update")
             domain_id = getattr(project, "domain_id", None)
         except Exception:
             exceptions.handle(request, ignore=True)

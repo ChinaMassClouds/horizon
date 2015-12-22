@@ -711,3 +711,38 @@ class DeprecatedConfig(Exception):
 
     def __init__(self, msg):
         super(Exception, self).__init__(self.message % dict(msg=msg))
+
+
+
+from openstack_dashboard.models import log as mysql_log
+
+
+def operate_log(user, roles, message):
+    """
+    mysql log write
+    :param user: username
+    :param roles: roles
+    :param message: message
+    :return:
+    """
+    if not isinstance(roles, list):
+        return
+    if user in ('sysadmin', 'appradmin', 'auditadmin'):
+        role_name = user
+    else:
+        if len(roles) >= 2:
+            role_name = roles[1]['name'] if roles[0]['name'] == '_member_' else roles[0]['name']
+        else:
+            role_name = roles[0]['name']
+    mysql_log(user_name=user, role_name=role_name, message=message).save()
+
+
+def policy_is(username, *users):
+    """
+    :param username: present username
+    :param users:   judge usernames
+    :return: username is users True
+    """
+    if username in users:
+        return True
+    return False

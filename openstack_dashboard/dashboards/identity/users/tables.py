@@ -19,6 +19,7 @@ from horizon import tables
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 ENABLE = 0
@@ -31,10 +32,10 @@ class CreateUserLink(tables.LinkAction):
     url = "horizon:identity:users:create"
     classes = ("ajax-modal",)
     icon = "plus"
-    policy_rules = (('identity', 'identity:create_grant'),
-                    ("identity", "identity:create_user"),
-                    ("identity", "identity:list_roles"),
-                    ("identity", "identity:list_projects"),)
+    #policy_rules = (('identity', 'identity:create_grant'),
+    #                ("identity", "identity:create_user"),
+    #                ("identity", "identity:list_roles"),
+    #                ("identity", "identity:list_projects"),)
 
     def allowed(self, request, user):
         return api.keystone.keystone_can_edit_user()
@@ -46,9 +47,9 @@ class EditUserLink(policy.PolicyTargetMixin, tables.LinkAction):
     url = "horizon:identity:users:update"
     classes = ("ajax-modal",)
     icon = "pencil"
-    policy_rules = (("identity", "identity:update_user"),
-                    ("identity", "identity:list_projects"),)
-    policy_target_attrs = (("user_id", "id"),)
+    #policy_rules = (("identity", "identity:update_user"),
+    #                ("identity", "identity:list_projects"),)
+    #policy_target_attrs = (("user_id", "id"),)
 
     def allowed(self, request, user):
         return api.keystone.keystone_can_edit_user()
@@ -87,8 +88,8 @@ class ToggleEnabled(policy.PolicyTargetMixin, tables.BatchAction):
             ),
         )
     classes = ("btn-toggle",)
-    policy_rules = (("identity", "identity:update_user"),)
-    policy_target_attrs = (("user_id", "id"),)
+   # policy_rules = (("identity", "identity:update_user"),)
+   # policy_target_attrs = (("user_id", "id"),)
 
     def allowed(self, request, user=None):
         if not api.keystone.keystone_can_edit_user():
@@ -117,9 +118,25 @@ class ToggleEnabled(policy.PolicyTargetMixin, tables.BatchAction):
         if self.enabled:
             api.keystone.user_update_enabled(request, obj_id, False)
             self.current_past_action = DISABLE
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+                    break
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name+" user disable ")
         else:
             api.keystone.user_update_enabled(request, obj_id, True)
             self.current_past_action = ENABLE
+            name = '-'
+            for row in self.table.data:
+                if row.id == obj_id:
+                    name = row.name
+                    break
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name+" user enable ")
 
 
 class DeleteUsersAction(tables.DeleteAction):
@@ -138,7 +155,7 @@ class DeleteUsersAction(tables.DeleteAction):
             u"Deleted Users",
             count
         )
-    policy_rules = (("identity", "identity:delete_user"),)
+  #  policy_rules = (("identity", "identity:delete_user"),)
 
     def allowed(self, request, datum):
         if not api.keystone.keystone_can_edit_user() or \
@@ -147,7 +164,16 @@ class DeleteUsersAction(tables.DeleteAction):
         return True
 
     def delete(self, request, obj_id):
+       # username = api.keystone.user_get(request, obj_id)
         api.keystone.user_delete(request, obj_id)
+        name = '-'
+        for row in self.table.data:
+            if row.id == obj_id:
+                name = row.name
+                break
+        operate_log(request.user.username,
+                    request.user.roles,
+                    name+" user delete ")
 
 
 class UserFilterAction(tables.FilterAction):

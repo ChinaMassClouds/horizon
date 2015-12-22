@@ -25,6 +25,7 @@ from horizon.utils import memoized
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 LOG = logging.getLogger(__name__)
@@ -83,6 +84,12 @@ class DeleteSubnet(SubnetPolicyTargetMixin, CheckNetworkEditable,
                                args=[network_id])
             exceptions.handle(request, msg, redirect=redirect)
 
+    def allowed(self, request, datum=None):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
+
+
+
 
 class CreateSubnet(SubnetPolicyTargetMixin, CheckNetworkEditable,
                    tables.LinkAction):
@@ -97,6 +104,9 @@ class CreateSubnet(SubnetPolicyTargetMixin, CheckNetworkEditable,
         network_id = self.table.kwargs['network_id']
         return reverse(self.url, args=(network_id,))
 
+    def allowed(self, request, datum=None):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class UpdateSubnet(SubnetPolicyTargetMixin, CheckNetworkEditable,
                    tables.LinkAction):
@@ -110,6 +120,9 @@ class UpdateSubnet(SubnetPolicyTargetMixin, CheckNetworkEditable,
     def get_link_url(self, subnet):
         network_id = self.table.kwargs['network_id']
         return reverse(self.url, args=(network_id, subnet.id))
+
+    def allowed(self, request, datum=None):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class SubnetsTable(tables.DataTable):

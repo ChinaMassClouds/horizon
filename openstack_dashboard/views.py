@@ -1,5 +1,4 @@
-# Copyright 2012 Nebula, Inc.
-#
+
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -41,7 +40,8 @@ def splash(request):
         response = shortcuts.redirect(horizon.get_user_home(request.user))
     else:
         form = forms.Login(request)
+        request.session.clear()
+        request.session.set_test_cookie()
         response = shortcuts.render(request, 'splash.html', {'form': form})
-    if 'logout_reason' in request.COOKIES:
-        response.delete_cookie('logout_reason')
+    response.delete_cookie('logout_reason')
     return response

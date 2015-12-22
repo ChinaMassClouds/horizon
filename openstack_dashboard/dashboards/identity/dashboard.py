@@ -14,7 +14,7 @@
 
 
 from django.utils.translation import ugettext_lazy as _
-
+from openstack_dashboard.openstack.common.log import policy_is
 import horizon
 
 
@@ -22,7 +22,12 @@ class Identity(horizon.Dashboard):
     name = _("Identity")
     slug = "identity"
     default_panel = 'projects'
+    img = '/static/dashboard/img/nav/Dashboard_identity.png'
     panels = ('domains', 'projects', 'users', 'groups', 'roles',)
+
+    def nav(self, context):
+        username = context['request'].user.username
+        return policy_is(username, 'sysadmin', 'admin')
 
 
 horizon.register(Identity)

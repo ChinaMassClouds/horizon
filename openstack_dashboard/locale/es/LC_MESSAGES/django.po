@@ -3,22 +3,21 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Alberto Molina Coballes <alb.molina@gmail.com>, 2014-2015
+# Alberto Molina Coballes <alb.molina@gmail.com>, 2014
 # cametiope <aldohcasa@hotmail.com>, 2014
 # egongu90 <dabarren@gmail.com>, 2014
 # David Martinez Morata, 2014
 # Guillermo Vitas Gil <gvitgo@gmail.com>, 2014
 # Marian Tort <marian.tort@gmail.com>, 2014
-# Milton Mazzarri <inactive+milmazz@transifex.com>, 2014
+# Milton Mazzarri <milmazz@gmail.com>, 2014
 # Pablo Iranzo Gómez <Pablo.Iranzo@gmail.com>, 2014
-# Victoria Martínez de la Cruz <vickymsee@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: Horizon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-02 00:51-0600\n"
-"PO-Revision-Date: 2015-04-03 14:42+0000\n"
-"Last-Translator: Alberto Molina Coballes <alb.molina@gmail.com>\n"
+"POT-Creation-Date: 2014-10-05 14:55+0000\n"
+"PO-Revision-Date: 2014-10-09 10:21+0000\n"
+"Last-Translator: Marian Tort <marian.tort@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/horizon/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -52,7 +51,7 @@ msgstr "QCOW2 - Emulador QEMU"
 
 #: settings.py:109
 msgid "Raw"
-msgstr "Raw"
+msgstr "Fila"
 
 #: settings.py:110
 msgid "VDI"
@@ -66,15 +65,15 @@ msgstr "VHD"
 msgid "VMDK"
 msgstr "VMDK"
 
-#: settings.py:296
+#: settings.py:298
 msgid "All TCP"
 msgstr "Todos los TCP"
 
-#: settings.py:302
+#: settings.py:304
 msgid "All UDP"
 msgstr "Todos los UDP"
 
-#: settings.py:308
+#: settings.py:310
 msgid "All ICMP"
 msgstr "Todos los ICMP"
 
@@ -105,7 +104,7 @@ msgstr "Uso promedio del CPU"
 #: api/ceilometer.py:933
 #: dashboards/project/instances/templates/instances/_flavors_and_quotas.html:28
 msgid "Number of VCPUs"
-msgstr "Número de VCPUs"
+msgstr "Número de VCPU"
 
 #: api/ceilometer.py:937
 msgid "Number of read requests"
@@ -316,22 +315,22 @@ msgstr "El usuario %s no tiene roles definidos para ese proyecto."
 msgid "Password changed. Please log in again to continue."
 msgstr "Se ha cambiado la contraseña. Inicie sesión de nuevo para continuar."
 
-#: api/neutron.py:207
+#: api/neutron.py:206
 #, python-format
 msgid "ALLOW %(ethertype)s %(proto_port)s %(direction)s %(remote)s"
 msgstr "PERMITIR %(ethertype)s %(proto_port)s %(direction)s %(remote)s"
 
-#: api/neutron.py:853
+#: api/neutron.py:852
 msgid "Unable to connect to Neutron."
 msgstr "No ha sido posible conectar con Neutron."
 
-#: api/neutron.py:890
+#: api/neutron.py:889
 #, python-format
 msgid "Unable to parse IP address %s."
 msgstr "No ha sido posible analizar dirección IP %s."
 
 #. Translators: Only used inside Horizon code and invisible to users
-#: api/neutron.py:1029
+#: api/neutron.py:1022
 #, python-format
 msgid ""
 "The requested feature '%(feature)s' is unknown. Please make sure to specify "
@@ -339,14 +338,14 @@ msgid ""
 msgstr "The requested feature '%(feature)s' is unknown. Please make sure to specify a feature defined in FEATURE_MAP."
 
 #. Translators: Only used inside Horizon code and invisible to users
-#: api/neutron.py:1047
+#: api/neutron.py:1040
 #, python-format
 msgid ""
 "The 'operation' parameter for get_feature_permission '%(feature)s' is "
 "invalid. It should be one of %(allowed)s"
-msgstr "No es válido el parámetro 'operation' para get_feature_permission '%(feature)s'.Debe ser uno de %(allowed)s"
+msgstr "The 'operation' parameter for get_feature_permission '%(feature)s' is invalid. It should be one of %(allowed)s"
 
-#: api/neutron.py:1062
+#: api/neutron.py:1055
 #, python-format
 msgid "Failed to check Neutron '%s' extension is not supported"
 msgstr "Fallo al verificar la extension \"%s\" de Neutron, no esta soportada"
@@ -1072,7 +1071,7 @@ msgstr "Instancias"
 #: dashboards/admin/defaults/workflows.py:46
 #: dashboards/identity/projects/workflows.py:50 usage/quotas.py:65
 msgid "Injected Files"
-msgstr "Ficheros inyectados"
+msgstr "Archivos inyectados"
 
 #: dashboards/admin/defaults/tables.py:47
 #: dashboards/admin/defaults/workflows.py:53
@@ -1098,13 +1097,13 @@ msgstr "Volúmenes"
 #: dashboards/project/volumes/tabs.py:76
 #: dashboards/project/volumes/snapshots/tables.py:147 usage/quotas.py:75
 msgid "Volume Snapshots"
-msgstr "Instantáneas de volumen"
+msgstr "Snapshots de volumen"
 
 #: dashboards/admin/defaults/tables.py:49
 #: dashboards/admin/defaults/workflows.py:51
 #: dashboards/identity/projects/workflows.py:56 usage/quotas.py:76
 msgid "Total Size of Volumes and Snapshots (GB)"
-msgstr "Tamaño total de volúmenes e instantáneas (GB)"
+msgstr "Tamaño total de volúmenes y snapshots (GB)"
 
 #: dashboards/admin/defaults/tables.py:50
 #: dashboards/admin/defaults/workflows.py:37
@@ -1174,7 +1173,7 @@ msgstr "Volúmenes LUKS"
 
 #: dashboards/admin/defaults/tables.py:57
 msgid "LUKS Volume Snapshots"
-msgstr "Instantáneas de volumen LUKS"
+msgstr "Snapshots de volumen LUKS"
 
 #: dashboards/admin/defaults/tables.py:59
 msgid "Total Size of LUKS Volumes and Snapshots (GB)"
@@ -1840,7 +1839,7 @@ msgstr "Descripción:"
 #: dashboards/admin/hypervisors/templates/hypervisors/compute/_evacuate_host.html:18
 msgid ""
 "Evacuate the servers from the selected down host to an active target host."
-msgstr "Evacuar los servidores del anfitrión caído a un anfitrión destino activo."
+msgstr "Evacuar los servidores del anfitrión caido a un anfitrión objetivo activo."
 
 #: dashboards/admin/images/forms.py:65
 msgid "Unable to update the image metadata."
@@ -2223,7 +2222,7 @@ msgstr "No ha sido posible recuperar la información del anfitrión."
 #: dashboards/admin/instances/views.py:167
 #: dashboards/project/databases/views.py:138
 #: dashboards/project/instances/views.py:208
-#: dashboards/project/instances/views.py:326
+#: dashboards/project/instances/views.py:318
 msgid "Unable to retrieve instance details."
 msgstr "No ha sido posible obtener los detalles de las instancias."
 
@@ -3008,7 +3007,7 @@ msgstr "Ha habido un fallo al obtener la red %s para la subred"
 
 #: dashboards/admin/networks/templates/networks/_create.html:19
 msgid "Create a new network for any project as you need."
-msgstr "Crear una nueva red para cada proyecto según se necesite."
+msgstr "Crear una nueva red para cada proyecto según lo necesites."
 
 #: dashboards/admin/networks/templates/networks/_create.html:20
 msgid ""
@@ -3060,7 +3059,7 @@ msgstr "Actualizar red"
 
 #: dashboards/admin/networks/templates/networks/agents/_add.html:19
 msgid "From here you can add a DHCP agent for the network."
-msgstr "Desde aquí puede añadir un agente DHCP para la red."
+msgstr "Desde aquí puedes añadir un agente DHCP para la red."
 
 #: dashboards/admin/networks/templates/networks/ports/_create.html:19
 msgid ""
@@ -3276,7 +3275,7 @@ msgstr "ID del proyecto"
 #: dashboards/project/routers/tables.py:173
 #: dashboards/project/routers/templates/routers/_detail_overview.html:16
 msgid "Distributed"
-msgstr "Distribuido"
+msgstr "Distribuido.¡"
 
 #: dashboards/admin/routers/templates/routers/_detail_overview.html:22
 #: dashboards/project/routers/forms.py:37
@@ -3299,7 +3298,7 @@ msgstr "Red exterior conectada"
 #: dashboards/project/routers/tables.py:83
 #: dashboards/project/routers/templates/routers/_update.html:8
 msgid "Edit Router"
-msgstr "Editar router"
+msgstr "Editar enrutador"
 
 #: dashboards/admin/routers/templates/routers/_update.html:18
 #: dashboards/project/routers/templates/routers/_update.html:18
@@ -3321,7 +3320,7 @@ msgstr "Detalle del router"
 #: dashboards/project/routers/templates/routers/update.html:3
 #: dashboards/project/routers/templates/routers/update.html:6
 msgid "Update Router"
-msgstr "Actualizar router"
+msgstr "Actualizar enrutador"
 
 #: dashboards/admin/volumes/tabs.py:50 dashboards/admin/volumes/tabs.py:117
 #: dashboards/admin/volumes/snapshots/tables.py:51
@@ -3369,11 +3368,11 @@ msgstr "Error borrando"
 #: dashboards/admin/volumes/snapshots/forms.py:43
 #, python-format
 msgid "Successfully updated volume snapshot status: \"%s\"."
-msgstr "Se ha actualizado correctamente el estado de la instantánea de volumen: \"%s\"."
+msgstr "Actualización satisfactoria del estado de la snapshot del volumen: \"%s\"."
 
 #: dashboards/admin/volumes/snapshots/forms.py:48
 msgid "Unable to update volume snapshot status."
-msgstr "No ha sido posible actualizar el estado de la instantánea de volumen."
+msgstr "No ha sido posible actualizar el estado de la snapshot del volumen."
 
 #: dashboards/admin/volumes/snapshots/tables.py:29
 #: dashboards/admin/volumes/templates/volumes/snapshots/_update_status.html:28
@@ -9464,17 +9463,17 @@ msgstr "No ha sido posible obtener la consola SPICE de la instancia \"%s\"."
 msgid "Unable to get RDP console for instance \"%s\"."
 msgstr "No ha sido posible obtener la consola RDP para la instancia \"%s\"."
 
-#: dashboards/project/instances/views.py:283
+#: dashboards/project/instances/views.py:275
 #, python-format
 msgid "Unable to retrieve details for instance \"%s\"."
 msgstr "No ha sido posible obtener los detalles de la instancia \"%s\"."
 
-#: dashboards/project/instances/views.py:294
+#: dashboards/project/instances/views.py:286
 #, python-format
 msgid "Unable to retrieve IP addresses from Neutron for instance \"%s\"."
 msgstr "No ha sido posible obtener las direcciones IP de Neutron para la instancia \"%s\"."
 
-#: dashboards/project/instances/views.py:338
+#: dashboards/project/instances/views.py:330
 msgid "Unable to retrieve flavors."
 msgstr "No ha sido posible obtener los sabores."
 
@@ -13463,7 +13462,7 @@ msgstr "Rango de segmentos"
 
 #: dashboards/router/nexus1000v/forms.py:88
 msgid "1-4093 for VLAN; 5000 and above for Overlay"
-msgstr "1-4093 para VLAN; igual o mayor a 5000 para Overlay"
+msgstr ""
 
 #: dashboards/router/nexus1000v/forms.py:91
 #: dashboards/router/nexus1000v/forms.py:98
@@ -13473,7 +13472,7 @@ msgstr "Rango de IP multicast"
 
 #: dashboards/router/nexus1000v/forms.py:99
 msgid "Multicast IPv4 range(e.g. 224.0.1.0-224.0.1.100)"
-msgstr "rango multicast IPV4 (e.g. 224.0.1.0 - 224.0.1.100)"
+msgstr ""
 
 #: dashboards/router/nexus1000v/forms.py:103
 #: dashboards/router/nexus1000v/forms.py:110
@@ -13554,7 +13553,7 @@ msgstr "No ha sido posible obtener los detalles del perfil de la red."
 
 #: dashboards/router/nexus1000v/views.py:142
 msgid "Failed to obtain network profile binding"
-msgstr "Ha ocurrido un fallo al obtener la vinculación al perfil de red"
+msgstr ""
 
 #: dashboards/router/nexus1000v/templates/nexus1000v/_create_network_profile.html:19
 msgid " Select a name for your network profile."

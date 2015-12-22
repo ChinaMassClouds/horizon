@@ -18,6 +18,7 @@
 
 import json
 import sys
+import uuid
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -26,25 +27,24 @@ import django.test
 from django.utils.datastructures import SortedDict
 from django.utils import encoding
 from django.utils.http import urlencode
-from mox import IgnoreArg  # noqa
-from mox import IsA  # noqa
-
 from horizon import exceptions
 from horizon import forms
 from horizon.workflows import views
+
+from mox import IgnoreArg  # noqa
+from mox import IsA  # noqa
 from openstack_dashboard import api
 from openstack_dashboard.api import cinder
 from openstack_dashboard.dashboards.project.instances import console
 from openstack_dashboard.dashboards.project.instances import tables
 from openstack_dashboard.dashboards.project.instances import tabs
-from openstack_dashboard.dashboards.project.instances import workflows
+from openstack_dashboard.dashboards.project.applyhost import workflows
 from openstack_dashboard.test import helpers
 from openstack_dashboard.usage import quotas
 
-
 INDEX_URL = reverse('horizon:project:instances:index')
 SEC_GROUP_ROLE_PREFIX = \
-    workflows.update_instance.INSTANCE_SEC_GROUP_SLUG + "_role_"
+    openstack_dashboard.dashboards.project.applyhost.workflows.update_instance.INSTANCE_SEC_GROUP_SLUG + "_role_"
 
 
 class InstanceTests(helpers.TestCase):
@@ -154,6 +154,55 @@ class InstanceTests(helpers.TestCase):
         self.assertTemplateUsed(res, 'project/instances/index.html')
         instances = res.context['instances_table'].data
 
+        self.assertItemsEqual(instances, self.servers.list())
+
+    @helpers.create_stubs({
+        api.nova: ('flavor_list', 'server_list', 'flavor_get',
+                   'tenant_absolute_limits', 'extension_supported',),
+        api.glance: ('image_list_detailed',),
+        api.network: ('floating_ip_simple_associate_supported',
+                      'floating_ip_supported',
+                      'servers_update_addresses',),
+    })
+    def test_index_flavor_get_exception(self):
+        servers = self.servers.list()
+        flavors = self.flavors.list()
+        api.nova.extension_supported('AdminActions',
+                                     IsA(http.HttpRequest)) \
+            .MultipleTimes().AndReturn(True)
+        # UUIDs generated using indexes are unlikely to match
+        # any of existing flavor ids and are guaranteed to be deterministic.
+        for i, server in enumerate(servers):
+            server.flavor['id'] = str(uuid.UUID(int=i))
+
+        search_opts = {'marker': None, 'paginate': True}
+        api.nova.server_list(IsA(http.HttpRequest), search_opts=search_opts) \
+            .AndReturn([servers, False])
+        api.network.servers_update_addresses(IsA(http.HttpRequest), servers)
+        api.nova.flavor_list(IsA(http.HttpRequest)).AndReturn(flavors)
+        api.glance.image_list_detailed(IgnoreArg()) \
+            .AndReturn((self.images.list(), False, False))
+        for server in servers:
+            api.nova.flavor_get(IsA(http.HttpRequest), server.flavor["id"]). \
+                AndRaise(self.exceptions.nova)
+        api.nova.tenant_absolute_limits(IsA(http.HttpRequest), reserved=True) \
+           .MultipleTimes().AndReturn(self.limits['absolute'])
+        api.network.floating_ip_supported(IsA(http.HttpRequest)) \
+            .MultipleTimes().AndReturn(True)
+        api.network.floating_ip_simple_associate_supported(
+            IsA(http.HttpRequest)).MultipleTimes().AndReturn(True)
+
+        self.mox.ReplayAll()
+
+        res = self.client.get(INDEX_URL)
+
+        instances = res.context['instances_table'].data
+
+        self.assertTemplateUsed(res, 'project/instances/index.html')
+        # Since error messages produced for each instance are identical,
+        # there will be only one error message for all instances
+        # (messages de-duplication)
+        self.assertMessageCount(res, error=1)
         self.assertItemsEqual(instances, self.servers.list())
 
     @helpers.create_stubs({
@@ -602,15 +651,23 @@ class InstanceTests(helpers.TestCase):
 
         self.assertRedirectsNoFollow(res, INDEX_URL)
 
-    @helpers.create_stubs({api.nova: ("server_get",
-                                   "instance_volumes_list",
-                                   "flavor_get"),
-                        api.network: ("server_security_groups",
-                                      "servers_update_addresses")})
+    @helpers.create_stubs({
+        api.nova: (
+            "server_get",
+            "instance_volumes_list",
+            "flavor_get",
+            "extension_supported"
+        ),
+        api.network: (
+            "server_security_groups",
+            "servers_update_addresses",
+            "floating_ip_simple_associate_supported",
+            "floating_ip_supported"
+        )
+    })
     def _get_instance_details(self, server, qs=None,
                               flavor_return=None, volumes_return=None,
-                              security_groups_return=None,
-                              flavor_exception=False):
+                              security_groups_return=None, ):
 
         url = reverse('horizon:project:instances:detail', args=[server.id])
         if qs:
@@ -630,14 +687,16 @@ class InstanceTests(helpers.TestCase):
                                              IgnoreArg())
         api.nova.instance_volumes_list(IsA(http.HttpRequest),
                                        server.id).AndReturn(volumes_return)
-        if flavor_exception:
-            api.nova.flavor_get(IsA(http.HttpRequest), server.flavor['id']) \
-                    .AndRaise(self.exceptions.nova)
-        else:
-            api.nova.flavor_get(IsA(http.HttpRequest), server.flavor['id']) \
-                    .AndReturn(flavor_return)
+        api.nova.flavor_get(IsA(http.HttpRequest), server.flavor['id']) \
+                .AndReturn(flavor_return)
         api.network.server_security_groups(IsA(http.HttpRequest), server.id) \
                 .AndReturn(security_groups_return)
+        api.network.floating_ip_simple_associate_supported(
+            IsA(http.HttpRequest)).MultipleTimes().AndReturn(True)
+        api.network.floating_ip_supported(IsA(http.HttpRequest)) \
+            .MultipleTimes().AndReturn(True)
+        api.nova.extension_supported('AdminActions', IsA(http.HttpRequest)) \
+            .MultipleTimes().AndReturn(True)
 
         self.mox.ReplayAll()
 
@@ -759,13 +818,6 @@ class InstanceTests(helpers.TestCase):
         res = self.client.get(url)
 
         self.assertRedirectsNoFollow(res, INDEX_URL)
-
-    def test_instance_details_flavor_not_found(self):
-        server = self.servers.first()
-        res = self._get_instance_details(server, flavor_exception=True)
-        self.assertTemplateUsed(res,
-                                'project/instances/_detail_overview.html')
-        self.assertContains(res, "Not available")
 
     @helpers.create_stubs({api.nova: ('server_console_output',)})
     def test_instance_log(self):
@@ -1076,7 +1128,7 @@ class InstanceTests(helpers.TestCase):
 
     def _instance_update_post(self, server_id, server_name, secgroups):
         default_role_field_name = 'default_' + \
-            workflows.update_instance.INSTANCE_SEC_GROUP_SLUG + '_role'
+            openstack_dashboard.dashboards.project.applyhost.workflows.update_instance.INSTANCE_SEC_GROUP_SLUG + '_role'
         formData = {'name': server_name,
                     default_role_field_name: 'member',
                     SEC_GROUP_ROLE_PREFIX + 'member': secgroups}
@@ -2916,34 +2968,6 @@ class InstanceTests(helpers.TestCase):
 
         self.assertRedirectsNoFollow(res, INDEX_URL)
 
-    @helpers.create_stubs({api.nova: ('server_get',
-                                      'flavor_list',
-                                      'flavor_get',
-                                      'tenant_absolute_limits',
-                                      'extension_supported')})
-    def test_instance_resize_get_current_flavor_not_found(self):
-        server = self.servers.first()
-        api.nova.server_get(IsA(http.HttpRequest), server.id) \
-            .AndReturn(server)
-        api.nova.flavor_list(IsA(http.HttpRequest)) \
-            .AndReturn([])
-        api.nova.flavor_list(IsA(http.HttpRequest)) \
-            .AndReturn([])
-        api.nova.flavor_get(IsA(http.HttpRequest), server.flavor['id']) \
-            .AndRaise(self.exceptions.nova)
-        api.nova.tenant_absolute_limits(IsA(http.HttpRequest)) \
-           .AndReturn(self.limits['absolute'])
-        api.nova.extension_supported('DiskConfig',
-                                     IsA(http.HttpRequest)) \
-            .AndReturn(True)
-
-        self.mox.ReplayAll()
-
-        url = reverse('horizon:project:instances:resize', args=[server.id])
-        res = self.client.get(url)
-
-        self.assertTemplateUsed(res, views.WorkflowView.template_name)
-
     def _instance_resize_post(self, server_id, flavor_id, disk_config):
         formData = {'flavor': flavor_id,
                     'default_role': 'member',
@@ -3311,7 +3335,7 @@ class InstanceTests(helpers.TestCase):
             return self.data
 
     def test_clean_file_upload_form_oversize_data(self):
-        t = workflows.create_instance.CustomizeAction(self.request, {})
+        t = openstack_dashboard.dashboards.project.applyhost.workflows.create_instance.CustomizeAction(self.request, {})
         upload_str = 'user data'
         files = {'script_upload':
             self.SimpleFile('script_name',
@@ -3325,7 +3349,7 @@ class InstanceTests(helpers.TestCase):
             files)
 
     def test_clean_file_upload_form_invalid_data(self):
-        t = workflows.create_instance.CustomizeAction(self.request, {})
+        t = openstack_dashboard.dashboards.project.applyhost.workflows.create_instance.CustomizeAction(self.request, {})
         upload_str = '\x81'
         files = {'script_upload':
             self.SimpleFile('script_name',
@@ -3339,7 +3363,7 @@ class InstanceTests(helpers.TestCase):
             files)
 
     def test_clean_file_upload_form_valid_data(self):
-        t = workflows.create_instance.CustomizeAction(self.request, {})
+        t = openstack_dashboard.dashboards.project.applyhost.workflows.create_instance.CustomizeAction(self.request, {})
         precleaned = 'user data'
         upload_str = 'user data'
         files = {'script_upload':
@@ -3437,35 +3461,6 @@ class InstanceAjaxTests(helpers.TestCase):
         # a different availability zone.', u'']]
         self.assertEqual(messages[0][0], 'error')
         self.assertTrue(messages[0][1].startswith('Failed'))
-
-    @helpers.create_stubs({api.nova: ("server_get",
-                                      "flavor_get",
-                                      "extension_supported"),
-                           api.neutron: ("is_extension_supported",)})
-    def test_row_update_flavor_not_found(self):
-        server = self.servers.first()
-        instance_id = server.id
-
-        api.nova.extension_supported('AdminActions', IsA(http.HttpRequest))\
-            .MultipleTimes().AndReturn(True)
-        api.neutron.is_extension_supported(IsA(http.HttpRequest),
-                                           'security-group')\
-            .MultipleTimes().AndReturn(True)
-        api.nova.server_get(IsA(http.HttpRequest), instance_id)\
-            .AndReturn(server)
-        api.nova.flavor_get(IsA(http.HttpRequest), server.flavor["id"])\
-            .AndRaise(self.exceptions.nova)
-
-        self.mox.ReplayAll()
-
-        params = {'action': 'row_update',
-                  'table': 'instances',
-                  'obj_id': instance_id,
-                  }
-        res = self.client.get('?'.join((INDEX_URL, urlencode(params))),
-                              HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        self.assertContains(res, server.name)
-        self.assertContains(res, "Not available")
 
 
 class ConsoleManagerTests(helpers.TestCase):

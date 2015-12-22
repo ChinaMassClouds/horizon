@@ -51,12 +51,16 @@ class IndexView(tables.DataTableView):
         try:
             # "is_public=None" will return all flavors.
             flavors = api.nova.flavor_list(request, None)
+            res_flavors = []
+            for f in flavors:
+                if getattr(f,'name','') not in ('m1.cserver_flavor','m1.vcenter_flavor'):
+                    res_flavors.append(f)
         except Exception:
             exceptions.handle(request,
                               _('Unable to retrieve flavor list.'))
         # Sort flavors by size
-        flavors.sort(key=lambda f: (f.vcpus, f.ram, f.disk))
-        return flavors
+        res_flavors.sort(key=lambda f: (f.vcpus, f.ram, f.disk))
+        return res_flavors
 
 
 class CreateView(workflows.WorkflowView):

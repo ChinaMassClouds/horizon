@@ -22,6 +22,6 @@ from openstack_dashboard.dashboards.settings import dashboard
 class UserPanel(horizon.Panel):
     name = _("User Settings")
     slug = 'user'
-
+    img = '/static/dashboard/img/nav/user1.png'
 
 dashboard.Settings.register(UserPanel)

@@ -21,6 +21,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Hypervisors(horizon.Panel):
     name = _("Hypervisors")
     slug = 'hypervisors'
+    img = '/static/dashboard/img/nav/hypervisors1.png'
     permissions = ('openstack.roles.admin', 'openstack.services.compute')
 
 

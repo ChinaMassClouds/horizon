@@ -41,14 +41,13 @@ import xstatic.pkg.jsencrypt
 import xstatic.pkg.qunit
 import xstatic.pkg.rickshaw
 import xstatic.pkg.spin
-
 from openstack_dashboard import exceptions
 
 warnings.formatwarning = lambda message, category, *args, **kwargs: \
     '%s: %s' % (category.__name__, message)
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-BIN_DIR = os.path.abspath(os.path.join(ROOT_PATH, '..', 'bin'))
+BIN_DIR = '/usr/bin'
 
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
@@ -58,12 +57,13 @@ TEMPLATE_DEBUG = DEBUG
 
 SITE_BRANDING = 'OpenStack Dashboard'
 
-LOGIN_URL = '/auth/login/'
-LOGOUT_URL = '/auth/logout/'
+WEBROOT = '/dashboard'
+LOGIN_URL = WEBROOT + '/auth/login/'
+LOGOUT_URL = WEBROOT + '/auth/logout/'
 # LOGIN_REDIRECT_URL can be used as an alternative for
 # HORIZON_CONFIG.user_home, if user_home is not set.
 # Do not set it to '/home/', as this will cause circular redirect loop
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = WEBROOT
 
 MEDIA_ROOT = os.path.abspath(os.path.join(ROOT_PATH, '..', 'media'))
 MEDIA_URL = '/media/'
@@ -71,6 +71,30 @@ STATIC_ROOT = os.path.abspath(os.path.join(ROOT_PATH, '..', 'static'))
 STATIC_URL = '/static/'
 
 ROOT_URLCONF = 'openstack_dashboard.urls'
+mysql_info = {}
+import os
+conf_path = '/etc/openstack.cfg'
+if os.path.exists(conf_path):
+    with open(conf_path, 'r') as f:
+        for i in f.readlines():
+            if i.split('=', 1)[0] in ('DASHBOARD_HOST',
+                                      'DASHBOARD_PASS',
+                                      'DASHBOARD_NAME',
+                                      'DASHBOARD_USER',
+                                      'DASHBOARD_PORT'):
+                data = i.split('=', 1)
+                mysql_info[data[0]] = data[1].strip()
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': mysql_info.get('DASHBOARD_NAME', 'dashboard'),
+        'USER': mysql_info.get('DASHBOARD_USER', 'dashboard'),
+        'PASSWORD': mysql_info.get('DASHBOARD_PASS', '123456'),
+        'HOST': mysql_info.get('DASHBOARD_HOST', '192.168.15.20'),
+        'PORT': mysql_info.get('DASHBOARD_PORT', '3306'),
+    }
+}
 
 HORIZON_CONFIG = {
     'dashboards': ('project', 'admin', 'router',),
@@ -137,7 +161,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     'horizon.loaders.TemplateLoader'
 )
@@ -200,6 +223,7 @@ else:
         xstatic.main.XStatic(xstatic.pkg.jquery_ui).base_dir))
 
 COMPRESS_PRECOMPILERS = (
+    ('text/less', 'lesscpy {infile}'),
     ('text/scss', 'django_pyscss.compressor.DjangoScssFilter'),
 )
 
@@ -211,6 +235,7 @@ COMPRESS_ENABLED = True
 COMPRESS_OUTPUT_DIR = 'dashboard'
 COMPRESS_CSS_HASHING_METHOD = 'hash'
 COMPRESS_PARSER = 'compressor.parser.HtmlParser'
+COMPRESS_OFFLINE = True
 
 INSTALLED_APPS = [
     'openstack_dashboard',

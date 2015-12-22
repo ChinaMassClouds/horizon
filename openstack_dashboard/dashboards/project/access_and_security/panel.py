@@ -23,6 +23,7 @@ from openstack_dashboard.dashboards.project import dashboard
 class AccessAndSecurity(horizon.Panel):
     name = _("Access & Security")
     slug = 'access_and_security'
+    img = '/static/dashboard/img/nav/access_and_security1.png'
 
 
 dashboard.Project.register(AccessAndSecurity)

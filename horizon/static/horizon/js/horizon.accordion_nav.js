@@ -9,8 +9,11 @@ horizon.addInitFunction(function() {
   });
 
   // mark the active panel group
-  var activePanel = $('.nav_accordion > dd > div > ul > li > a.active');
+  var activePanel = $('.nav_accordion > dd ul > li > a.active');
   activePanel.closest('div').find('h4').addClass('active');
+  activePanel.closest('li').addClass('active');
+  var old_img = activePanel.parent().find('img').attr('src');
+  activePanel.parent().find('img').attr('src',old_img.replace('1','2'));
 
   // dashboard click
   $('.nav_accordion > dt').click(function() {
@@ -50,7 +53,6 @@ horizon.addInitFunction(function() {
       {
         // collapse the inactive panel groups
         activeDashPanel.closest('div').find("h4").addClass("active");
-        activeDashPanel.closest('ul').slideDown();
         allPanelGroupBodies.each(function(index, value) {
           var activePanels = $(value).find('li > a.active');
           if(activePanels.length === 0) {
@@ -80,7 +82,7 @@ horizon.addInitFunction(function() {
   });
 
   // panel selection
-  $('.nav_accordion > dd > ul > li > a').click(function() {
+  $('.nav_accordion ul > li > a').click(function() {
     horizon.modals.modal_spinner(gettext("Loading"));
   });
 

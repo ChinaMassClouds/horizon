@@ -27,6 +27,7 @@
 <script src="{{ STATIC_URL }}horizon/lib/spin.jquery.js" type="text/javascript" charset="utf-8"></script>
 <script src="{{ STATIC_URL }}horizon/lib/jquery-ui/ui/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
 <script src="{{ STATIC_URL }}horizon/lib/jquery/jquery.bootstrap.wizard.js" type="text/javascript" charset="utf-8"></script>
+<script src="{{ STATIC_URL }}horizon/lib/chart/chartist.js" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ STATIC_URL }}horizon/lib/d3.js" type="text/javascript" charset="utf-8"></script>
 
@@ -36,12 +37,19 @@
 <script src="{{ STATIC_URL }}horizon/lib/hogan.js" type="text/javascript" charset='utf-8'></script>
 
 <script src='{{ STATIC_URL }}horizon/js/horizon.accordion_nav.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.alarmmsg.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.alarmpolicy.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.topbar.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.host.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.communication.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.forms.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.formset_table.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.instances.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.controlcenter.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.messages.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.modals.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.monitor_status.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.monitor_overview.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.quota.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.tables.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.tables_inline_edit.js' type='text/javascript' charset='utf-8'></script>
@@ -50,6 +58,7 @@
 <script src='{{ STATIC_URL }}horizon/js/horizon.users.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.membership.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.networktopology.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/js/horizon.logictopo.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.d3piechart.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/js/horizon.heattop.js' type='text/javascript' charset='utf-8'></script>
 <script src='{{ STATIC_URL }}horizon/lib/rickshaw.js' type='text/javascript' charset='utf-8'></script>
@@ -59,6 +68,24 @@
 <script src='{{ STATIC_URL }}horizon/lib/jsencrypt/jsencrypt.js' type='text/javascript' charset='utf-8'></script>
 
 <script src='{{ STATIC_URL }}horizon/js/horizon.images.js' type='text/javascript' charset='utf-8'></script>
+
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/mottle-0.7.1.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/biltong-0.2.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/katavorio-0.13.0.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/util.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/browser-util.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/jsPlumb.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/dom-adapter.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/overlay-component.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/endpoint.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/connection.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/anchors.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/defaults.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/connectors-flowchart.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/renderers-svg.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/base-library-adapter.js' type='text/javascript' charset='utf-8'></script>
+<script src='{{ STATIC_URL }}horizon/lib/jsPlumb/dom.jsPlumb.js' type='text/javascript' charset='utf-8'></script>
+
 {% block custom_js_files %}{% endblock %}
 {% endcompress %}
 

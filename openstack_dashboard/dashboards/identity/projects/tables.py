@@ -5,7 +5,7 @@
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
@@ -22,6 +22,7 @@ from keystoneclient.exceptions import Conflict  # noqa
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 class UpdateMembersLink(tables.LinkAction):
@@ -118,6 +119,12 @@ class DeleteTenantsAction(tables.DeleteAction):
 
     def delete(self, request, obj_id):
         api.keystone.tenant_delete(request, obj_id)
+        for row in self.table.data:
+            if row.id == obj_id:
+                name = row.name
+        operate_log(request.user.username,
+                    request.user.roles,
+                    name+" tenant delete")
 
 
 class TenantFilterAction(tables.FilterAction):
@@ -162,7 +169,6 @@ class UpdateCell(tables.UpdateAction):
                 name=project_obj.name,
                 description=project_obj.description,
                 enabled=project_obj.enabled)
-
         except Conflict:
             # Returning a nice error message about name conflict. The message
             # from exception is not that clear for the users.

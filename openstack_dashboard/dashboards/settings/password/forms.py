@@ -23,6 +23,7 @@ from horizon import forms
 from horizon import messages
 from horizon.utils import functions as utils
 from horizon.utils import validators
+from openstack_dashboard.openstack.common.log import operate_log
 
 from openstack_dashboard import api
 
@@ -58,9 +59,13 @@ class PasswordForm(forms.SelfHandlingForm):
                 api.keystone.user_update_own_password(request,
                                                     data['current_password'],
                                                     data['new_password'])
+
                 response = http.HttpResponseRedirect(settings.LOGOUT_URL)
                 msg = _("Password changed. Please log in again to continue.")
                 utils.add_logout_reason(request, response, msg)
+                operate_log(self.request.user.username,
+                            self.request.user.roles,
+                            self.request.user.username + ' Password changed')
                 return response
             except Exception:
                 exceptions.handle(request,

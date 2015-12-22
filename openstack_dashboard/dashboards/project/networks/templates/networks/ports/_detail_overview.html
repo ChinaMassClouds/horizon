@@ -13,7 +13,11 @@
     <dd>{{ port.id|default:_("None") }}</dd>
     {% url 'horizon:project:networks:detail' port.network_id as network_url %}
     <dt>{% trans "Network ID" %}</dt>
+    {% if port.request.user.username == 'sysadmin' or port.request.user.username == 'admin' %}
     <dd><a href="{{ network_url }}">{{ port.network_id|default:_("None") }}</a></dd>
+  {% else %}
+      <dd>{{ port.network_id|default:_("None") }}</dd>
+  {% endif %}
     <dt>{% trans "Project ID" %}</dt>
     <dd>{{ port.tenant_id|default:"-" }}</dd>
     <dt>{% trans "Fixed IP" %}</dt>

@@ -18,6 +18,7 @@ from horizon import workflows
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.admin.aggregates import constants
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 class SetAggregateInfoAction(workflows.Action):
@@ -187,6 +188,10 @@ class CreateAggregateWorkflow(workflows.Workflow):
                     request,
                     name=context['name'],
                     availability_zone=context['availability_zone'])
+
+            operate_log(request.user.username,
+                        request.user.roles,
+                        context["name"] + "aggragate create")
         except Exception:
             exceptions.handle(request, _('Unable to create host aggregate.'))
             return False

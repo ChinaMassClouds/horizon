@@ -19,7 +19,9 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Metering(horizon.Panel):
     name = _("Resource Usage")
     slug = 'metering'
+    img = '/static/dashboard/img/nav/metering1.png'
     permissions = ('openstack.services.metering', 'openstack.roles.admin', )
+
 
 
 dashboard.Admin.register(Metering)

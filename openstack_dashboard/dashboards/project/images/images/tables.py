@@ -14,6 +14,7 @@
 
 from collections import defaultdict
 
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters as filters
@@ -26,6 +27,8 @@ from horizon.utils.memoized import memoized  # noqa
 
 from openstack_dashboard import api
 from openstack_dashboard.api import base
+from openstack_dashboard.openstack.common.log import policy_is
+from openstack_dashboard.openstack.common.log import operate_log
 
 NOT_LAUNCHABLE_FORMATS = ['aki', 'ari']
 
@@ -36,7 +39,6 @@ class LaunchImage(tables.LinkAction):
     url = "horizon:project:instances:launch"
     classes = ("ajax-modal", "btn-launch")
     icon = "cloud-upload"
-    policy_rules = (("compute", "compute:create"),)
 
     def get_link_url(self, datum):
         base_url = reverse(self.url)
@@ -50,10 +52,10 @@ class LaunchImage(tables.LinkAction):
                             "source_id": self.table.get_object_id(datum)})
         return "?".join([base_url, params])
 
+
     def allowed(self, request, image=None):
         if image and image.container_format not in NOT_LAUNCHABLE_FORMATS:
-            return image.status in ("active",)
-        return False
+            return image.status in ("active",) and  policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class DeleteImage(tables.DeleteAction):
@@ -73,19 +75,26 @@ class DeleteImage(tables.DeleteAction):
             count
         )
 
-    policy_rules = (("image", "delete_image"),)
+    #policy_rules = (("image", "delete_image"),)
 
     def allowed(self, request, image=None):
-        # Protected images can not be deleted.
         if image and image.protected:
             return False
         if image:
-            return image.owner == request.user.tenant_id
+            return image.owner == request.user.tenant_id and policy_is(request.user.username, 'admin', 'sysadmin')
         # Return True to allow table-level bulk delete action to appear.
-        return True
+
 
     def delete(self, request, obj_id):
         api.glance.image_delete(request, obj_id)
+        name = '-'
+        for row in self.table.data:
+           if row.id == obj_id:
+               name = row.name
+        operate_log(request.user.username,
+                    request.user.roles,
+                    name + " image delete")
+
 
 
 class CreateImage(tables.LinkAction):
@@ -94,7 +103,9 @@ class CreateImage(tables.LinkAction):
     url = "horizon:project:images:images:create"
     classes = ("ajax-modal",)
     icon = "plus"
-    policy_rules = (("image", "add_image"),)
+
+    def allowed(self, request):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class EditImage(tables.LinkAction):
@@ -108,10 +119,10 @@ class EditImage(tables.LinkAction):
     def allowed(self, request, image=None):
         if image:
             return image.status in ("active",) and \
-                image.owner == request.user.tenant_id
+                image.owner == request.user.tenant_id and policy_is(request.user.username, 'admin', 'sysadmin')
         # We don't have bulk editing, so if there isn't an image that's
         # authorized, don't allow the action.
-        return False
+        #policy_rules = (("image", "add_image"),)
 
 
 class CreateVolumeFromImage(tables.LinkAction):
@@ -130,7 +141,7 @@ class CreateVolumeFromImage(tables.LinkAction):
     def allowed(self, request, image=None):
         if (image and image.container_format not in NOT_LAUNCHABLE_FORMATS
                 and base.is_service_enabled(request, 'volume')):
-            return image.status == "active"
+            return image.status == "active" and policy_is(request.user.username, 'admin', 'sysadmin')
         return False
 
 
@@ -148,14 +159,13 @@ class OwnerFilter(tables.FixedFilterAction):
         def make_dict(text, tenant, icon):
             return dict(text=text, value=tenant, icon=icon)
 
-        buttons = [make_dict(_('Project'), 'project', 'fa-home')]
+        buttons = [make_dict(_('Project'), 'project', 'icon-home')]
         for button_dict in filter_tenants():
             new_dict = button_dict.copy()
             new_dict['value'] = new_dict['tenant']
             buttons.append(new_dict)
-        buttons.append(make_dict(_('Shared with Me'), 'shared',
-                                 'fa-share-square-o'))
-        buttons.append(make_dict(_('Public'), 'public', 'fa-group'))
+        buttons.append(make_dict(_('Shared with Me'), 'shared', 'icon-share'))
+        buttons.append(make_dict(_('Public'), 'public', 'icon-fire'))
         return buttons
 
     def categorize(self, table, images):
@@ -245,7 +255,6 @@ class ImagesTable(tables.DataTable):
     disk_format = tables.Column(get_format, verbose_name=_("Format"))
     size = tables.Column("size",
                          filters=(filters.filesizeformat,),
-                         attrs=({"data-type": "size"}),
                          verbose_name=_("Size"))
 
     class Meta:

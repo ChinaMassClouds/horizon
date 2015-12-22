@@ -22,6 +22,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Networks(horizon.Panel):
     name = _("Networks")
     slug = 'networks'
+    img = '/static/dashboard/img/nav/networks1.png'
     permissions = ('openstack.services.network',)
 
 dashboard.Admin.register(Networks)

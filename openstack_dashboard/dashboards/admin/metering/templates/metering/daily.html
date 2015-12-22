@@ -1,5 +1,4 @@
 {% load i18n %}
-{% load url from future %}
 <div id="ceilometer-report">
   <form class="form-horizontal" action="{% url 'horizon:admin:metering:report' %}" method="POST">
       {% csrf_token %}

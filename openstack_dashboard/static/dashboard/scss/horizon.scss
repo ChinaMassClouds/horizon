@@ -86,13 +86,14 @@ dt {
 }
 
 .topbar {
-  background: $gray-lighter;
+  background: #2c5285;
   // How to convert to SCSS?
   //#gradient > {
   //  +vertical($body-bg, $gray-lighter);
   //}
-  border-bottom: 1px solid $gray-light;
-  padding: 10px 0px 15px 0px;
+ padding: 0;
+	background-repeat: repeat-x;
+	border-bottom-style: none;
 }
 
 .topbar .switcher_bar {
@@ -131,7 +132,7 @@ dt {
 .topbar .switcher_bar div {
   padding: 2px 10px 1px;
   line-height: 20px;
-  color: $gray;
+  color: #fff;
   text-decoration: none;
   overflow: hidden;
   padding-right: 32px;
@@ -140,6 +141,22 @@ dt {
 
 .topbar .context-box {
   display: inline;
+  .topmenu {
+    text-align: center;
+    width: 70px;
+    height: 70px;
+    border-right: 1px solid #4a6a96;
+    margin-right: -5px;
+    cursor: pointer;
+    span {
+      color:#fff;
+    }
+  }
+  .active {
+    background: #21416c; }
+  .topmenu:first-child {
+    border-left: 1px solid #4a6a96;
+  }
   @import "_context_selection";
 }
 
@@ -152,6 +169,7 @@ dt {
   max-width: 200px;
   vertical-align: top;
   white-space: nowrap;
+  background-color: transparent;
   background-image: url(../img/profile_drop.png);
   background-repeat: no-repeat;
   background-position: right center;
@@ -164,7 +182,7 @@ dt {
 }
 
 #user_info > a {
-  color: $text-color;
+  color: #fff;
   margin-left: 15px;
   line-height: 20px;
   font-size: 13px !important;
@@ -172,12 +190,12 @@ dt {
 
 .page-header {
   margin: 0 0 5px 0;
-  padding: 0 0 5px 0;
-  border-bottom: 2px solid $headings-color;
+  padding: 10px 0 5px 0;
+  border-bottom: 0;
   font-family: anivers;
   height: auto;
   width: 100%;
-  h2 {
+  h1 {
     margin: 0;
   }
 }
@@ -193,18 +211,20 @@ h2 {
 /* Login Splash Page */
 
 #splash .login {
-  background: url(../img/logo-splash.png) no-repeat center 35px;
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  margin: 0 0 0 -195px;
-  padding-top: 170px;
-  width: 390px;
-  border: 1px solid $border-color;
-  max-height: none;
-  border-radius: 6px;
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
-  background-clip: padding-box;
+ position: absolute;
+	top: 80px;
+	left: 50%;
+	margin: 0 0 0 -195px;
+	padding-top: 170px;
+	width: 390px;
+	border: 1px solid #dddddd;
+	max-height: none;
+	border-radius: 6px;
+	box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+	background-clip: padding-box;
+	background-image: url(../img/cal-02.png);
+	background-repeat: no-repeat;
+	background-position: top;
 
   form {
     .error {
@@ -232,16 +252,13 @@ h2 {
 }
 
 .sidebar {
-  border-width: 0 5px 5px 0;
-  border-color: $border-color;
-  border-style: solid;
-  border-radius: 0 0 5px 0;
+  border-width: 0;
   float: left;
   min-width: 236px;
 }
 
 .sidebar h4 {
-  margin-left: 14px;
+  margin-left: 0;
   color: $headings-color;
 }
 
@@ -262,10 +279,12 @@ h1.brand a {
   background: url(../img/logo.png) top left no-repeat;
   display: block;
   float: left;
-  width: 216px;
+  width: 160px;
   height: 35px;
   text-indent: -9999px;
-  margin-left: 16px;
+  margin-left: 37px;
+  margin-right: 38px;
+  margin-top: 17px;
 }
 
 
@@ -842,11 +861,9 @@ div.table_cell_wrapper {
  * the bootstrap style when necessary by setting the odd/even classes.
  */
 .table-striped.datatable tbody {
-  td {
-    background-clip: padding-box;
-  }
   tr.odd td {
     background-color: $table-bg-odd;
+    background-clip: padding-box;
   }
   tr.even td {
     background-color: inherit;
@@ -855,6 +872,7 @@ div.table_cell_wrapper {
   tr.even:hover td,
   tr:hover th {
     background-color: $table-bg-hover;
+    background-clip: padding-box;
   }
 }
 
@@ -933,6 +951,17 @@ form label {
     color: $gray;
     font-weight: bold;
     display: inline-block;
+}
+
+form .form-group > div.dynamic-select {
+  display: table;
+  border-collapse: separate;
+  > * {
+    display: table-cell;
+  }
+  > a {
+    width: 1%;
+  }
 }
 
 .modal.fullscreen .modal-dialog {
@@ -1080,21 +1109,25 @@ td.select {
 
 /* Actions dropdown */
 
-td.actions_column {
+.actions_column {
   white-space: nowrap;
   padding: 10px;
   position: relative;
   width: 200px;
-  background-clip: padding-box;
 }
 
-td.actions_column .btn-group {
+form.actions_column {
+  width: auto;
+  font-family: $font-family-base;
+}
+
+.actions_column .btn-group {
   display: inline-block;
 }
 
-td.actions_column .row_actions a,
-td.actions_column .row_actions input,
-td.actions_column .row_actions button,
+.actions_column .row_actions a,
+.actions_column .row_actions input,
+.actions_column .row_actions button,
 div.table_actions_menu .dropdown-menu a,
 div.table_actions_menu .dropdown-menu input,
 div.table_actions_menu .dropdown-menu button {
@@ -1109,11 +1142,11 @@ div.table_actions_menu .dropdown-menu button {
   @include box-shadow(none);
 }
 
-td.actions_column .row_actions .hide {
+.actions_column .row_actions .hide {
   display: none;
 }
 
-td.actions_column .btn-action-required {
+.actions_column .btn-action-required {
   font-weight: bold;
 }
 
@@ -1147,8 +1180,8 @@ td.actions_column .btn-action-required {
   background: none;
 }
 
-td.actions_column .dropdown-menu a:hover,
-td.actions_column .dropdown-menu button:hover,
+.actions_column .dropdown-menu a:hover,
+.actions_column .dropdown-menu button:hover,
 div.table_actions_menu .dropdown-menu a:hover,
 div.table_actions_menu .dropdown-menu button:hover {
   background-color: $gray-lighter;
@@ -1163,30 +1196,30 @@ div.table_actions_menu .dropdown-menu button:hover {
 
 /* Overrides for single-action rows (no dropdown) */
 
-tr td.actions_column ul.row_actions.single,
-tr:hover td.actions_column ul.row_actions.single,
-td.actions_column ul.row_actions.single,
-td.actions_column ul.row_actions.single:hover {
+tr .actions_column ul.row_actions.single,
+tr:hover .actions_column ul.row_actions.single,
+.actions_column ul.row_actions.single,
+.actions_column ul.row_actions.single:hover {
   border: none;
 }
 
-td.actions_column ul.row_actions.single li.action {
+.actions_column ul.row_actions.single li.action {
   display: block;
 }
 
-td.actions_column ul.row_actions.single li.action:hover {
+.actions_column ul.row_actions.single li.action:hover {
   background-color: transparent;
 }
 
-td.actions_column ul.row_actions.single a,
-td.actions_column ul.row_actions.single input,
-td.actions_column ul.row_actions.single button {
+.actions_column ul.row_actions.single a,
+.actions_column ul.row_actions.single input,
+.actions_column ul.row_actions.single button {
   color: $brand-info;
 }
 
-td.actions_column ul.row_actions.single a:hover,
-td.actions_column ul.row_actions.single input:hover,
-td.actions_column ul.row_actions.single button:hover {
+.actions_column ul.row_actions.single a:hover,
+.actions_column ul.row_actions.single input:hover,
+.actions_column ul.row_actions.single button:hover {
   color: $text-color;
 }
 
@@ -2003,6 +2036,22 @@ label.log-length {
     .delete {
       padding-right: 0;
       text-align: right;
+      .btn {
+        &:before {
+          content:"Delete ";
+        }
+        &.deleting:before {
+          content:"Deleting ";
+        }
+      }
+      .btn.instance {
+        &:before {
+          content:"Terminate ";
+        }
+        &.deleting:before {
+          content:"Terminating ";
+        }
+      }
     }
   }
   table.detailInfoTable {
@@ -2045,6 +2094,12 @@ label.log-length {
     }
     .btn {
       line-height: 1.4;
+    }
+    .btn:before {
+      content:"Delete ";
+    }
+    .btn.deleting:before {
+      content:"Deleting ";
     }
   }
   font-size: 11px;
@@ -2308,7 +2363,3 @@ label.log-length {
 a.link-popover { cursor: default; }
 
 a:hover.link-popover { text-decoration: none; }
-
-.has-feedback .form-control-feedback {
-  top: 0;
-}

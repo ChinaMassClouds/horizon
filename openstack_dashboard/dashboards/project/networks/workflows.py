@@ -27,7 +27,7 @@ from horizon import workflows
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.networks.subnets import utils
-
+from openstack_dashboard.openstack.common.log import operate_log
 
 LOG = logging.getLogger(__name__)
 
@@ -330,6 +330,9 @@ class CreateNetwork(workflows.Workflow):
             network.set_id_as_name_if_empty()
             self.context['net_id'] = network.id
             msg = _('Network "%s" was successfully created.') % network.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        params["name"] + " create network")
             LOG.debug(msg)
             return network
         except Exception as e:

@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Images(horizon.Panel):
     name = _("Images")
     slug = 'images'
+    img = '/static/dashboard/img/nav/images1.png'
     permissions = ('openstack.services.image',)
 
 

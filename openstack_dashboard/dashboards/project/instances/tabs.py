@@ -23,6 +23,7 @@ from openstack_dashboard.dashboards.project.instances \
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.instances import console
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class OverviewTab(tabs.Tab):
@@ -33,6 +34,9 @@ class OverviewTab(tabs.Tab):
 
     def get_context_data(self, request):
         return {"instance": self.tab_group.kwargs['instance']}
+
+    def allowed(self, request):
+        return True
 
 
 class LogTab(tabs.Tab):
@@ -74,7 +78,13 @@ class ConsoleTab(tabs.Tab):
     def allowed(self, request):
         # The ConsoleTab is available if settings.CONSOLE_TYPE is not set at
         # all, or if it's set to any value other than None or False.
-        return bool(getattr(settings, 'CONSOLE_TYPE', True))
+        #return bool(getattr(settings, 'CONSOLE_TYPE', True))
+        roles = self.request.user.roles
+        if len(roles)>=2:
+            role = roles[1]['name'] if roles[0]['name']=='_member_' else roles[0]['name']
+        else:
+            role = '_member_'
+        return policy_is(self.request.user.username, 'admin', 'sysadmin') or role!='admin'
 
 
 class AuditTab(tabs.TableTab):

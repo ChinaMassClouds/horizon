@@ -29,6 +29,7 @@ from horizon import messages
 from horizon.utils import validators
 
 from openstack_dashboard import api
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 LOG = logging.getLogger(__name__)
@@ -128,6 +129,10 @@ class CreateUserForm(BaseUserForm):
             messages.success(request,
                              _('User "%s" was successfully created.')
                              % data['name'])
+
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"]+" user create")
             if data['project'] and data['role_id']:
                 roles = api.keystone.roles_for_user(request,
                                         new_user.id,
@@ -206,6 +211,9 @@ class UpdateUserForm(BaseUserForm):
             response = api.keystone.user_update(request, user, **data)
             messages.success(request,
                              _('User has been updated successfully.'))
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"]+" user update")
         except Exception:
             response = exceptions.handle(request, ignore=True)
             messages.error(request, _('Unable to update the user.'))

@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Instances(horizon.Panel):
     name = _("Instances")
     slug = 'instances'
+    img = '/static/dashboard/img/nav/instances1.png'
     permissions = ('openstack.roles.admin', 'openstack.services.compute')
 
 

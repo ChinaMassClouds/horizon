@@ -26,17 +26,15 @@ from django.views.generic import TemplateView  # noqa
 from django.views.generic import View  # noqa
 
 from openstack_dashboard import api
-
 from openstack_dashboard.dashboards.project.network_topology.instances \
     import tables as instances_tables
 from openstack_dashboard.dashboards.project.network_topology.ports \
     import tables as ports_tables
 from openstack_dashboard.dashboards.project.network_topology.routers \
     import tables as routers_tables
-
 from openstack_dashboard.dashboards.project.instances import\
     views as i_views
-from openstack_dashboard.dashboards.project.instances.workflows import\
+from openstack_dashboard.dashboards.project.applyhost.workflows import\
     create_instance as i_workflows
 from openstack_dashboard.dashboards.project.networks import\
     views as n_views
@@ -236,8 +234,7 @@ class JSONView(View):
                   'fixed_ips': port.fixed_ips,
                   'device_owner': port.device_owner,
                   'status': port.status}
-                 for port in neutron_ports
-                 if port.device_owner != 'network:router_ha_interface']
+                 for port in neutron_ports]
         self.add_resource_url('horizon:project:networks:ports:detail',
                               ports)
         return ports

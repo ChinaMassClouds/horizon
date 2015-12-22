@@ -24,7 +24,7 @@ from horizon import tables
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
-
+from openstack_dashboard.openstack.common.log import operate_log
 LOG = logging.getLogger(__name__)
 
 
@@ -69,6 +69,13 @@ class DeleteNetwork(policy.PolicyTargetMixin, CheckNetworkEditable,
                 LOG.debug('Deleted subnet %s' % s.id)
 
             api.neutron.network_delete(request, network_id)
+            name = "-"
+            for row in self.table.data:
+                if row.id == network_id:
+                    name = row.name
+            operate_log(request.user.username,
+                        request.user.roles,
+                        name + " network delete")
             LOG.debug('Deleted network %s successfully' % network_id)
         except Exception:
             msg = _('Failed to delete network %s') % network_id

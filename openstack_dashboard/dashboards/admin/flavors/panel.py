@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Flavors(horizon.Panel):
     name = _("Flavors")
     slug = 'flavors'
+    img = '/static/dashboard/img/nav/flavors1.png'
     permissions = ('openstack.services.compute',)
 
 

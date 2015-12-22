@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.project import dashboard
 class NetworkTopology(horizon.Panel):
     name = _("Network Topology")
     slug = 'network_topology'
+    img = '/static/dashboard/img/nav/network_topology1.png'
     permissions = ('openstack.services.network', )
 
 

@@ -3,16 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Chen, Shang-Pin <dreamerwolf.tw@gmail.com>, 2015
 # Tom Fifield <tom@openstack.org>, 2014
-# Xiao Xi LIU <liuxx@cn.ibm.com>, 2014
-# Zhang Xiaowei <zero00072@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Horizon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-02 00:51-0600\n"
-"PO-Revision-Date: 2015-04-02 05:22+0000\n"
+"POT-Creation-Date: 2014-10-05 14:55+0000\n"
+"PO-Revision-Date: 2014-10-02 22:40+0000\n"
 "Last-Translator: Zhang Xiaowei <zero00072@gmail.com>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/projects/p/horizon/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -98,58 +95,34 @@ msgstr "運作中"
 msgid "There was an error submitting the form. Please try again."
 msgstr "提交表單時有錯誤。請再試一次。"
 
-#: static/horizon/js/horizon.networktopology.js:511
-#: static/horizon/js/horizon.networktopology.js:517
-msgid "None"
-msgstr "無"
-
-#: static/horizon/js/horizon.networktopology.js:530
-msgid "Delete"
-msgstr "刪除"
-
-#: static/horizon/js/horizon.networktopology.js:533
+#: static/horizon/js/horizon.networktopology.js:535
 msgid "STATUS"
 msgstr "狀態"
 
-#: static/horizon/js/horizon.networktopology.js:534
+#: static/horizon/js/horizon.networktopology.js:536
 msgid "ID"
 msgstr "識別號"
 
-#: static/horizon/js/horizon.networktopology.js:535
+#: static/horizon/js/horizon.networktopology.js:537
 msgid "Interfaces"
 msgstr "網路卡介面"
 
-#: static/horizon/js/horizon.networktopology.js:536
-msgid "Delete Interface"
-msgstr "刪除網路卡介面"
-
-#: static/horizon/js/horizon.networktopology.js:537
-msgid "Open Console"
-msgstr "開啟終端機"
-
 #: static/horizon/js/horizon.networktopology.js:538
-msgid "View Details"
-msgstr "檢視詳細資訊"
+msgid "Interface"
+msgstr "網路卡介面"
 
-#: static/horizon/js/horizon.networktopology.js:541
-msgid "Delete Router"
-msgstr "刪除路由器"
+#: static/horizon/js/horizon.networktopology.js:539
+msgid "open console"
+msgstr "打開主控臺"
 
-#: static/horizon/js/horizon.networktopology.js:542
-msgid "View Router Details"
-msgstr "檢視路由器詳細資訊"
+#: static/horizon/js/horizon.networktopology.js:540
+#, c-format
+msgid "view %s details"
+msgstr "檢視 %s 的詳細資訊"
 
 #: static/horizon/js/horizon.networktopology.js:545
 msgid "Add Interface"
 msgstr "加入網路卡介面"
-
-#: static/horizon/js/horizon.networktopology.js:551
-msgid "Terminate Instance"
-msgstr "終止雲實例"
-
-#: static/horizon/js/horizon.networktopology.js:552
-msgid "View Instance Details"
-msgstr "檢視雲實例詳細資訊"
 
 #: static/horizon/js/horizon.tables.js:39
 #: static/horizon/js/horizon.tables.js:377
@@ -173,13 +146,13 @@ msgstr "確認 %s"
 
 #: static/horizon/js/horizon.tables.js:207
 msgid "Please confirm your selection. This action cannot be undone."
-msgstr "請確認您的選擇。不能反悔這個動作。"
+msgstr "請確認您的選擇。這個動作將無法回復。"
 
 #: static/horizon/js/horizon.tables.js:364
 #, c-format
 msgid "Displaying %s item"
 msgid_plural "Displaying %s items"
-msgstr[0] "顯示 %s 項"
+msgstr[0] "顯示 %s 個項目"
 
 #: static/horizon/js/horizon.tables_inline_edit.js:88
 #: static/horizon/js/horizon.tables_inline_edit.js:169
@@ -188,4 +161,4 @@ msgstr "沒有足夠的權限執行這個操作。"
 
 #: static/horizon/js/horizon.users.js:18
 msgid "Passwords do not match."
-msgstr "密碼沒有相配。"
+msgstr "密碼沒有符合。"

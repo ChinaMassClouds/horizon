@@ -23,6 +23,7 @@ from openstack_dashboard.dashboards.project import dashboard
 class Routers(horizon.Panel):
     name = _("Routers")
     slug = 'routers'
+    img = '/static/dashboard/img/nav/routers1.png'
     permissions = ('openstack.services.network',)
 
 network_config = getattr(settings, 'OPENSTACK_NEUTRON_NETWORK', {})

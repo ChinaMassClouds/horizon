@@ -29,6 +29,7 @@ from horizon import tables
 from openstack_dashboard import api
 from openstack_dashboard.api import cinder
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 DELETABLE_STATES = ("available", "error", "error_extending")
@@ -93,7 +94,7 @@ class DeleteVolume(VolumePolicyTargetMixin, tables.DeleteAction):
     def allowed(self, request, volume=None):
         if volume:
             return volume.status in DELETABLE_STATES
-        return True
+        return policy_is(request.user.username, 'admin', 'sysamdin')
 
 
 class CreateVolume(tables.LinkAction):
@@ -126,7 +127,9 @@ class CreateVolume(tables.LinkAction):
             self.verbose_name = _("Create Volume")
             classes = [c for c in self.classes if c != "disabled"]
             self.classes = classes
-        return True
+        if request.user.username=='admin':
+                return True
+        return False
 
     def single(self, table, request, object_id=None):
         self.allowed(request, None)
@@ -295,7 +298,7 @@ class AttachmentColumn(tables.Column):
             # without the server name...
             instance = get_attachment_name(request, attachment)
             vals = {"instance": instance,
-                    "dev": html.escape(attachment.get("device", ""))}
+                    "dev": html.escape(attachment["device"])}
             attachments.append(link % vals)
         return safestring.mark_safe(", ".join(attachments))
 

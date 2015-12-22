@@ -788,11 +788,15 @@ class NetworkTests(test.TestCase):
 
 class NetworkSubnetTests(test.TestCase):
 
-    @test.create_stubs({api.neutron: ('subnet_get',)})
+    @test.create_stubs({api.neutron: ('network_get', 'subnet_get',)})
     def test_subnet_detail(self):
+        network = self.networks.first()
         subnet = self.subnets.first()
+
+        api.neutron.network_get(IsA(http.HttpRequest), network.id)\
+            .AndReturn(network)
         api.neutron.subnet_get(IsA(http.HttpRequest), subnet.id)\
-            .AndReturn(self.subnets.first())
+            .AndReturn(subnet)
 
         self.mox.ReplayAll()
 
@@ -1606,6 +1610,9 @@ class NetworkPortTests(test.TestCase):
         port = self.ports.first()
         api.neutron.port_get(IsA(http.HttpRequest), port.id)\
             .AndReturn(self.ports.first())
+        api.neutron.is_extension_supported(IsA(http.HttpRequest),
+                                           'mac-learning')\
+            .AndReturn(mac_learning)
         api.neutron.is_extension_supported(IsA(http.HttpRequest),
                                            'mac-learning')\
             .AndReturn(mac_learning)

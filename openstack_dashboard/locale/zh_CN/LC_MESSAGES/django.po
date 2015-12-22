@@ -12,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Horizon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-02 00:51-0600\n"
-"PO-Revision-Date: 2014-11-26 09:52+0000\n"
-"Last-Translator: LIU Yulong <dragon889@163.com>\n"
+"POT-Creation-Date: 2014-10-05 14:55+0000\n"
+"PO-Revision-Date: 2014-10-04 04:45+0000\n"
+"Last-Translator: Ying Chun Guo <daisy.ycguo@gmail.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/projects/p/horizon/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -62,15 +62,15 @@ msgstr "VHD"
 msgid "VMDK"
 msgstr "VMDK"
 
-#: settings.py:296
+#: settings.py:298
 msgid "All TCP"
 msgstr "所有TCP协议"
 
-#: settings.py:302
+#: settings.py:304
 msgid "All UDP"
 msgstr "所有UDP协议"
 
-#: settings.py:308
+#: settings.py:310
 msgid "All ICMP"
 msgstr "所有ICMP协议"
 
@@ -312,22 +312,22 @@ msgstr "在这一项目中用户 %s 尚未定义角色。"
 msgid "Password changed. Please log in again to continue."
 msgstr "密码已更改。请重新登录。"
 
-#: api/neutron.py:207
+#: api/neutron.py:206
 #, python-format
 msgid "ALLOW %(ethertype)s %(proto_port)s %(direction)s %(remote)s"
 msgstr "允许 %(ethertype)s %(proto_port)s %(direction)s %(remote)s"
 
-#: api/neutron.py:853
+#: api/neutron.py:852
 msgid "Unable to connect to Neutron."
 msgstr "无法连接到Neutron."
 
-#: api/neutron.py:890
+#: api/neutron.py:889
 #, python-format
 msgid "Unable to parse IP address %s."
 msgstr "无法解析IP地址 %s."
 
 #. Translators: Only used inside Horizon code and invisible to users
-#: api/neutron.py:1029
+#: api/neutron.py:1022
 #, python-format
 msgid ""
 "The requested feature '%(feature)s' is unknown. Please make sure to specify "
@@ -335,14 +335,14 @@ msgid ""
 msgstr "请求特性'%(feature)s'未知。确保指定FEATURE_MAP定义的特性。"
 
 #. Translators: Only used inside Horizon code and invisible to users
-#: api/neutron.py:1047
+#: api/neutron.py:1040
 #, python-format
 msgid ""
 "The 'operation' parameter for get_feature_permission '%(feature)s' is "
 "invalid. It should be one of %(allowed)s"
 msgstr "get_feature_permission '%(feature)s'的参数'operation'无效。应该是%(allowed)s中的一个。"
 
-#: api/neutron.py:1062
+#: api/neutron.py:1055
 #, python-format
 msgid "Failed to check Neutron '%s' extension is not supported"
 msgstr "检查Neutron '%s'失败，扩展不被支持。"
@@ -1972,7 +1972,7 @@ msgstr "系统信息"
 #: dashboards/project/firewalls/templates/firewalls/_rule_details.html:53
 #: dashboards/project/stacks/templates/stacks/_detail_overview.html:63
 msgid "Enabled"
-msgstr "启用"
+msgstr "激活"
 
 #: dashboards/admin/info/tables.py:27 dashboards/admin/info/tables.py:158
 #: dashboards/admin/networks/agents/tables.py:82
@@ -2007,12 +2007,12 @@ msgstr "块存储服务"
 #: dashboards/admin/info/tables.py:163
 #: dashboards/admin/networks/agents/tables.py:87
 msgid "Up"
-msgstr "正常"
+msgstr "向上"
 
 #: dashboards/admin/info/tables.py:165
 #: dashboards/admin/networks/agents/tables.py:88
 msgid "Down"
-msgstr "停止"
+msgstr "向下"
 
 #: dashboards/admin/info/tables.py:186 dashboards/admin/info/tabs.py:82
 msgid "Network Agents"
@@ -2213,7 +2213,7 @@ msgstr "无法获取主机信息。"
 #: dashboards/admin/instances/views.py:167
 #: dashboards/project/databases/views.py:138
 #: dashboards/project/instances/views.py:208
-#: dashboards/project/instances/views.py:326
+#: dashboards/project/instances/views.py:318
 msgid "Unable to retrieve instance details."
 msgstr "无法获取云主机详情。"
 
@@ -2591,7 +2591,7 @@ msgstr "无法获取网络配置概要"
 #: dashboards/admin/networks/forms.py:183
 #, python-format
 msgid "Network %s was successfully created."
-msgstr "成功创建 %s 网络。"
+msgstr "成果创建 %s 网络。"
 
 #: dashboards/admin/networks/forms.py:189
 #, python-format
@@ -3953,7 +3953,7 @@ msgstr "无法获取云硬盘详情"
 
 #: dashboards/identity/dashboard.py:22
 msgid "Identity"
-msgstr "Identity"
+msgstr "身份"
 
 #: dashboards/identity/domains/panel.py:24
 #: dashboards/identity/domains/tables.py:92
@@ -4738,7 +4738,7 @@ msgstr "编辑用户详情，包括主项目和角色。"
 
 #: dashboards/project/dashboard.py:22
 msgid "Compute"
-msgstr "Compute"
+msgstr "计算"
 
 #: dashboards/project/dashboard.py:32
 #: dashboards/project/networks/workflows.py:78
@@ -8834,7 +8834,7 @@ msgstr "无法获取云主机密码。"
 #: dashboards/project/instances/tables.py:90
 msgid "Terminate Instance"
 msgid_plural "Terminate Instances"
-msgstr[0] "终止实例"
+msgstr[0] "删除实例"
 
 #: dashboards/project/instances/tables.py:98
 msgid "Scheduled termination of Instance"
@@ -9383,17 +9383,17 @@ msgstr "无法获得云主机 \"%s\"SPICE控制台"
 msgid "Unable to get RDP console for instance \"%s\"."
 msgstr "无法获得云主机 \"%s\"RDP控制台"
 
-#: dashboards/project/instances/views.py:283
+#: dashboards/project/instances/views.py:275
 #, python-format
 msgid "Unable to retrieve details for instance \"%s\"."
 msgstr "无法获取云主机 \"%s\" 的详情。"
 
-#: dashboards/project/instances/views.py:294
+#: dashboards/project/instances/views.py:286
 #, python-format
 msgid "Unable to retrieve IP addresses from Neutron for instance \"%s\"."
 msgstr "无法从Neutron获取云主机 \"%s\" 的IP地址。"
 
-#: dashboards/project/instances/views.py:338
+#: dashboards/project/instances/views.py:330
 msgid "Unable to retrieve flavors."
 msgstr "无法获取云主机类型列表。"
 
@@ -9588,7 +9588,7 @@ msgstr "\"定制脚本\"与其它系统中的\"用户数据\"类似."
 msgid ""
 "The chart below shows the resources used by this project in relation to the "
 "project's quotas."
-msgstr "详细说明启动云主机的情况,下面的图表显示此项目所使用的资源和关联的项目配额。"
+msgstr "详细说明云主机的情况,下面的图表显示此项目所使用的资源和关联的项目配额。"
 
 #: dashboards/project/instances/templates/instances/_launch_network_help.html:3
 msgid ""
@@ -13391,7 +13391,7 @@ msgstr "输入参数(例如GRE)"
 #: dashboards/router/nexus1000v/forms.py:162
 #, python-format
 msgid "Network Profile %s was successfully created."
-msgstr "成功创建 %s 网络配置概要。"
+msgstr "成果创建 %s 网络配置概要。"
 
 #: dashboards/router/nexus1000v/forms.py:169
 #, python-format
@@ -13685,3 +13685,610 @@ msgstr "磁盘GB小时数"
 #: usage/tables.py:55 usage/tables.py:84
 msgid "Usage"
 msgstr "用量"
+
+msgid "TakeOver"
+msgstr "接管"
+
+msgid "Take Over"
+msgstr "接管"
+
+msgid "Control Center"
+msgstr "管理中心"
+
+msgid "Data Center"
+msgstr "数据中心"
+
+msgid "Source Domain Info"
+msgstr "资源域信息"
+
+msgid "Heterogeneous Platform"
+msgstr "异构平台"
+
+msgid "Belonged Source Domain"
+msgstr "所属资源域"
+
+msgid "Data Center Number"
+msgstr "虚拟数据中心数量"
+
+msgid "Clusters Number"
+msgstr "集群数量"
+
+msgid "Add Source Domain"
+msgstr "添加资源域"
+
+msgid "Delete Source Domain"
+msgid_plural "Delete Source Domains"
+msgstr[0] "删除资源域"
+
+msgid "Deleted Source Domain"
+msgid_plural "Deleted Source Domains"
+msgstr[0] "已删除资源域"
+
+msgid "Add Control Center"
+msgstr "添加管理中心"
+
+msgid "Delete Control Center"
+msgstr "删除管理中心"
+
+msgid "Delete Control Centers"
+msgstr "删除管理中心"
+
+msgid "Deleted Control Center"
+msgid_plural "Deleted Control Centers"
+msgstr[0] "已删除管理中心"
+
+msgid "Added new source domain \"%s\"."
+msgstr "已添加新的资源域 \"%s\"."
+
+msgid "Unable to add source domain \"%s\"."
+msgstr "无法添加资源域 \"%s\"."
+
+msgid ""
+"Source domain divide an availability zone into logical units by grouping "
+"together hosts. Create a source domain then select the hosts contained in "
+"it."
+msgstr "资源域通过将主机组合来把可用区域划分成逻辑单元。创建一个资源域，然后选择它里面的主机。"
+
+msgid "Unable to get source domain list"
+msgstr "无法获取资源域列表"
+
+msgid "The name \"%s\" is already used by another source domain."
+msgstr "该名称\"%s\"已经被其他资源域使用。"
+
+msgid "Manage Hosts within Source Domain"
+msgstr "管理资源域内的主机"
+
+msgid "Add hosts to this source domain. Hosts can be in multiple source domains."
+msgstr "增加主机到这个资源域。主机可以加入多个资源域。"
+
+msgid "Account"
+msgstr "账号"
+
+msgid "Assigned Storage"
+msgstr "存储资源已分配"
+
+msgid "Used Storage"
+msgstr "存储资源已使用"
+
+msgid "Total Storage"
+msgstr "存储资源总量"
+
+msgid "Virtual Type"
+msgstr "虚拟化类型"
+
+msgid "CPU utilization"
+msgstr "CPU占用率"
+
+msgid "Network utilization"
+msgstr "网络占用率"
+
+msgid "CPU cores"
+msgstr "CPU核数"
+
+msgid "Apply"
+msgstr "申请"
+
+msgid "Check"
+msgstr "审批"
+
+msgid "Unchecked Applications"
+msgstr "正在处理申请"
+
+msgid "Checked Applications"
+msgstr "已完成申请"
+
+msgid "Added new control center \"%s\"."
+msgstr "已添加新的管理中心 \"%s\"."
+
+msgid "Unable to add control center \"%s\"."
+msgstr "无法添加管理中心 \"%s\"."
+
+msgid "Control Center Info"
+msgstr "管理中心信息"
+
+msgid "Add clusters to this control center. Clusters can be in multiple control centers."
+msgstr "增加集群到这个管理中心。集群可以加入多个管理中心。"
+
+msgid "All available clusters"
+msgstr "所有可用集群"
+
+msgid "Selected clusters"
+msgstr "选中的集群"
+
+msgid "No clusters found."
+msgstr "没有找到集群。"
+
+msgid "No clusters selected."
+msgstr "没有选中的集群。"
+
+msgid "Manage Clusters within Control Center"
+msgstr "管理中心内的集群"
+
+msgid "Unable to retrieve source domains list."
+msgstr "无法获取资源域列表。"
+
+msgid "Unable to retrieve heterogeneous platforms list."
+msgstr "无法获取异构平台列表。"
+
+msgid "Edit Source Domain"
+msgstr "编辑资源域"
+
+msgid "Add/Remove Hosts to Source Domain"
+msgstr "添加/删除资源域中的主机"
+
+msgid "The source domain was updated."
+msgstr "资源域已更新."
+
+msgid "Unable to update the source domain."
+msgstr "无法更新资源域。"
+
+msgid ""
+"Add hosts to this source domain or remove hosts from it. Hosts can be in "
+"multiple source domains."
+msgstr "将主机添加到这个资源域，或者从资源域中删除主机。主机可以存在于多个资源域中。"
+
+msgid "Manage Source Domain"
+msgstr "管理资源域"
+
+msgid "Unable to create source domain."
+msgstr "无法创建资源域."
+
+msgid "Error adding Hosts to the source domain."
+msgstr "向资源域中添加主机出现错误."
+
+msgid "Choose source domain"
+msgstr "选择资源域"
+
+msgid "Unable to create control center."
+msgstr "无法创建管理中心."
+
+msgid "Unable to retrieve datacenters list."
+msgstr "无法获取数据中心列表。"
+
+msgid "Unable to retrieve clusters list."
+msgstr "无法获取集群列表。"
+
+msgid "Unable to retrieve hosts list."
+msgstr "无法获取主机列表。"
+
+msgid "Unable to delete control center."
+msgstr "无法删除管理中心."
+
+msgid "Please fill in the information of control center."
+msgstr "请填写管理中心的基本信息。"
+
+msgid "Tenant Name"
+msgstr "租户"
+
+msgid "Successfully updated source domain: \"%s.\""
+msgstr "成功更新资源域：\"%s.\""
+
+msgid "Unable to get the take-over-type of this domain."
+msgstr "无法获取该资源域的接管类型。"
+
+msgid "Unable to get vtype|clusters|templates info of source domain."
+msgstr "无法获取资源域所接管的异构平台的类型、集群、模板等信息。"
+
+msgid "Synchronize"
+msgstr "同步"
+
+msgid "Unable to synchronize the control center."
+msgstr "无法同步该管理中心。"
+
+msgid "Unable to retrieve heterogeneous platforms info."
+msgstr "无法获取异构平台信息。"
+
+msgid "Cloud Platform Account"
+msgstr "云平台账号"
+
+msgid "Cloud Platform Password"
+msgstr "云平台密码"
+
+msgid "Heterogeneous Platform Account"
+msgstr "异构平台账号"
+
+msgid "Heterogeneous Platform Password"
+msgstr "异构平台密码"
+
+msgid "Heterogeneous Platform IP Address"
+msgstr "异构平台IP地址"
+
+msgid "Success to synchronize the control center."
+msgstr "同步成功"
+
+msgid "Apply Host"
+msgstr "申请云主机"
+
+msgid "Apply Disk"
+msgstr "申请云硬盘"
+
+msgid "No."
+msgstr "编号"
+
+msgid "Counts"
+msgstr "数量"
+
+msgid "Create Date"
+msgstr "创建时间"
+
+msgid "Revoke Apply"
+msgstr "撤销申请"
+
+msgid "Unable to retrieve applications list of apply."
+msgstr "无法获取云主机申请列表。"
+
+msgid "Apply Reason"
+msgstr "申请理由"
+
+msgid "Host Check Info"
+msgstr "云主机审批信息"
+
+msgid "Disk Check Info"
+msgstr "云硬盘审批信息"
+
+msgid "Ratify"
+msgstr "批准"
+
+msgid "Add Alarm Policy"
+msgstr "添加告警策略"
+
+msgid "Confirm Alarm"
+msgstr "告警确认"
+
+msgid "Alarm Host"
+msgstr "告警主机"
+
+msgid "Alarm Content"
+msgstr "告警内容"
+
+msgid "Alarm Info"
+msgstr "告警信息"
+
+msgid "Alarm Policy"
+msgstr "告警策略"
+
+msgid "VM"
+msgstr "虚拟机"
+
+msgid "Monitor And Alarm"
+msgstr "监控告警"
+
+msgid "Monitor_And_Alarm"
+msgstr "监控告警"
+
+msgid "Check History"
+msgstr "审批历史"
+
+msgid "The availability_zone \"%s\" is already used by another source domain."
+msgstr "该可用域\"%s\"已经被其他资源域使用。"
+
+msgid "The name \"%s\" is already used by another control center."
+msgstr "该名称\"%s\"已经被其他管理中心使用。"
+
+msgid "Monitor Status"
+msgstr "监控状态"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Hard Disk"
+msgstr "硬盘"
+
+msgid "Apply Instance List"
+msgstr "云主机申请列表"
+
+msgid "Apply Instance"
+msgstr "申请云主机"
+
+msgid "Deleted Apply Instance"
+msgstr "删除申请云主机"
+
+msgid "Deleted Apply Disk"
+msgstr "删除申请云硬盘"
+
+msgid "Check Host"
+msgstr "云主机审批"
+
+msgid "User name"
+msgstr "用户"
+
+msgid "Project name"
+msgstr "项目"
+
+msgid "Alarmmsg"
+msgstr "告警信息"
+
+msgid "Order Number"
+msgstr "序号"
+
+msgid "Source Type"
+msgstr "资源类型"
+
+msgid "Policy Content"
+msgstr "策略详情"
+
+msgid "Alarm Way"
+msgstr "告警方式"
+
+msgid "Remark"
+msgstr "备注"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Monitor Period"
+msgstr "监控周期"
+
+msgid "Monitor Period (min)"
+msgstr "监控周期（分钟）"
+
+msgid "CPU alarm point (%)"
+msgstr "CPU报警阈值（%）"
+
+msgid "Memory alarm point (%)"
+msgstr "内存报警阈值（%）"
+
+msgid "Disk alarm point (%)"
+msgstr "磁盘报警阈值（%）"
+
+msgid "Email Alarm"
+msgstr "邮件提醒"
+
+msgid "If the utilization larger than the setted points, the system will alarm."
+msgstr "如果资源占用率高于所设定的阈值，系统将发出告警信息。"
+
+msgid "Unable to add alarm policy \"%s\"."
+msgstr "无法添加告警策略 \"%s\"."
+
+msgid "Not Enabled"
+msgstr "未启用"
+
+msgid "CPU > %s or Mem > %s or Disk > %s; duration %s minutes"
+msgstr "CPU > %s 或 内存 > %s 或 磁盘 > %s; 持续 %s 分钟"
+
+msgid "CPU > %s; duration %s minutes"
+msgstr "CPU > %s; 持续 %s 分钟"
+
+msgid "Mem > %s; duration %s minutes"
+msgstr "内存 > %s; 持续 %s 分钟"
+
+msgid "Disk > %s; duration %s minutes"
+msgstr "磁盘 > %s; 持续 %s 分钟"
+
+msgid "Mem > %s or Disk > %s; duration %s minutes"
+msgstr "内存 > %s 或 磁盘 > %s; 持续 %s 分钟"
+
+msgid "CPU > %s or Disk > %s; duration %s minutes"
+msgstr "CPU > %s 或 磁盘 > %s; 持续 %s 分钟"
+
+msgid "CPU > %s or Mem > %s; duration %s minutes"
+msgstr "CPU > %s 或 内存 > %s; 持续 %s 分钟"
+
+msgid "Alarm with email"
+msgstr "邮件"
+
+msgid "Duration (min)"
+msgstr "持续时间（分钟）"
+
+msgid "Duration"
+msgstr "持续时间"
+
+msgid "All available hosts or vms"
+msgstr "可用的主机/虚拟机"
+
+msgid "Selected hosts or vms"
+msgstr "选中的主机/虚拟机"
+
+msgid "No hosts or vms found."
+msgstr "没有找到主机或虚拟机。"
+
+msgid "No host or vm selected."
+msgstr "没有选中的主机或虚拟机。"
+
+msgid "Target hosts/vms"
+msgstr "目标主机/虚拟机"
+
+msgid "Select target hosts/vms"
+msgstr "选择监控目标主机/虚拟机"
+
+msgid "Unable to get the available hosts/vms"
+msgstr "无法获取可用的主机或虚拟机"
+
+msgid "The name \"%s\" is already used by another policy."
+msgstr "该名称\"%s\"已经被其他策略使用。"
+
+msgid "Email Address"
+msgstr "邮箱地址"
+
+msgid "Mail Settings"
+msgstr "邮箱设置"
+
+msgid "Add mail receiver"
+msgstr "添加收件人"
+
+msgid "Mail Server Address"
+msgstr "邮箱服务器地址"
+
+msgid "Mail Server Port"
+msgstr "邮箱服务器端口"
+
+msgid "Mail Sender Address"
+msgstr "发件人邮箱地址"
+
+msgid "Mail Sender Username"
+msgstr "发件人邮箱用户名"
+
+msgid "Mail Sender Password"
+msgstr "发件人邮箱密码"
+
+msgid "Set the mail server address and the sender informaton, so that we can alarm using email."
+msgstr "设置邮箱服务器地址以及发件人地址，以便于系统能够通过发邮件的形式发出告警。"
+
+msgid "The email address has already exists."
+msgstr "该邮箱地址已存在。"
+
+msgid "If the password input is empty, the system will use old password. "
+"If you input a new password, that will replace the old one."
+msgstr "如果不填写发件人邮箱密码，系统将使用原来的密码。如果填写了新的密码，将替换旧的密码。"
+
+msgid "Please input the mail password."
+msgstr "请填写发件人邮箱密码。"
+
+msgid "Receiver Mail Address"
+msgstr "收件人地址"
+
+msgid "Input the policy name, select the domain of target hosts or vms."
+msgstr "填写策略名称，并选择监控的目标主机或虚拟机所属的资源域。"
+
+msgid "In case the usage of resource lager than the setted threshold and keeps a long time, "
+"system will alarm, you can set using email or not."
+msgstr "当目标主机或虚拟机占用资源超过所设定的阈值并且持续时间超过所设定的时间时，系统会报警，用户可设置报警时是否发送邮件。"
+
+msgid "Unable to enable the policy."
+msgstr "无法启用该策略。"
+
+msgid "used"
+msgstr "占用"
+
+msgid "cpu used larger than %s keep more than %s minutes"
+msgstr "CPU占用率高于 %s 且持续超过 %s 分钟"
+
+msgid "mem used larger than %s keep more than %s minutes"
+msgstr "内存占用率高于 %s 且持续超过 %s 分钟"
+
+msgid "disk used larger than %s keep more than %s minutes"
+msgstr "磁盘占用率高于 %s 且持续超过 %s 分钟"
+
+msgid "Treated"
+msgstr "已处理"
+
+msgid "Untreated"
+msgstr "未处理"
+
+msgid "Apply Volume"
+msgstr "申请云硬盘"
+
+msgid "Create Success"
+msgstr "已创建"
+
+msgid "Check Disk"
+msgstr "云硬盘审批"
+
+msgid "User Delete"
+msgstr "用户删除"
+
+msgid "Virtual Platform Type"
+msgstr "虚拟化类型"
+
+msgid "Select All"
+msgstr "全选"
+
+msgid "Select None"
+msgstr "全部取消"
+
+msgid "CPU usage top 5"
+msgstr "CPU占用率TOP5"
+
+msgid "mem usage top 5"
+msgstr "内存占用率TOP5"
+
+msgid "disk usage top 5"
+msgstr "磁盘占用率TOP5"
+
+msgid "net usage top 5"
+msgstr "网络流量TOP5"
+
+msgid "Approved"
+msgstr "同意"
+
+msgid "Refuse"
+msgstr "拒绝"
+
+msgid "Create Error"
+msgstr "已创建"
+
+msgid "Error in creating"
+msgstr "创建出错"
+
+msgid "The virtualplatformIP \"%s\" has already taken over by another domain."
+msgstr "该异构平台 \"%s\" 已经被其它资源域接管。"
+
+msgid "Only those domains that have only one child-host can be used."
+msgstr "只拥有一个主机的资源域才能用来接管异构平台。"
+
+msgid "Logic Topo"
+msgstr "逻辑拓扑"
+
+msgid "Pending approval"
+msgstr "待审批"
+
+msgid "Create Instance"
+msgstr "创建实例"
+
+msgid "Please input the reason for applying."
+msgstr "请填写申请的原因。"
+
+msgid "Applyed %(count)s named \"%(name)s\"."
+msgstr "申请了%(count)s 名称\"%(name)s\"."
+
+msgid "Unable to apply %(count)s named \"%(name)s\"."
+msgstr "无法申请%(count)s 名字 \"%(name)s\"."
+
+msgid "Specify the details for applying an instance."
+msgstr "指定申请云主机的详细信息"
+
+msgid "Unable to retrieve alarm messages list."
+msgstr "无法获取告警信息列表。"
+
+msgid "Unable to retrieve vms list."
+msgstr "无法获取虚拟机列表。"
+
+msgid "OS"
+msgstr "操作系统"
+
+msgid "Please select one template."
+msgstr "请选择一个模板。"
+
+msgid "The name is already used by another vm."
+msgstr "该名称已经被其他云主机使用。"
+
+msgid "Unable to delete instance."
+msgstr "无法删除实例"
+
+msgid "Unable to retrieve logs."
+msgstr "无法获取日志列表"
+
+msgid "The plat is syncing, you can not delete it."
+msgstr "该异构平台正在同步，无法删除。"
+
+msgid "Source Type ="
+msgstr "资源类型 ="
+
+msgid "Zone ="
+msgstr "域 ="
+
+msgid "Instance in vm_state suspended. Cannot stop while the instance is in this state."
+msgstr "无法关闭挂起的实例。"
+
+msgid "Create Disk"
+msgstr "创建云硬盘"

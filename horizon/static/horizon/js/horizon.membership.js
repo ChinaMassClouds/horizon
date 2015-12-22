@@ -246,6 +246,53 @@ horizon.membership = {
     horizon.membership.detect_no_results(step_slug);
   },
 
+  	select_all: function(step_slug){
+	  	$('.select-all').on('click',function(event){
+  			event.preventDefault();
+	  		$(".available_" + step_slug + " .btn-group a[href='#add_remove']").each(function(index,obj){
+	  			var available = $(".available_" + step_slug).has($(obj)).length;
+	  			var data_id = horizon.membership.get_field_id($(obj).parent().siblings().attr('data-' + step_slug +  '-id'));
+	  			var member_el = $(obj).parent().parent();
+			
+			    var default_role = horizon.membership.default_role_id[step_slug];
+			    $(obj).text("-");
+			    $("." + step_slug + "_members").append(member_el);
+			    horizon.membership.add_member_to_role(step_slug, data_id, default_role);
+			
+			    if (horizon.membership.has_roles[step_slug]) {
+			      $(obj).parent().siblings(".role_options").show();
+			      horizon.membership.update_member_role_dropdown(step_slug, data_id, [default_role], member_el);
+			    }
+			
+				// update lists
+				horizon.membership.list_filtering(step_slug);
+				horizon.membership.detect_no_results(step_slug);
+			
+				// remove input filters
+				$("input." + step_slug + "_filter").val("");
+	  		});
+	  	});
+	  	$('.select-none').on('click',function(event){
+  			event.preventDefault();
+	  		$("." + step_slug + "_members .btn-group a[href='#add_remove']").each(function(index,obj){
+	  			var available = $(".available_" + step_slug).has($(obj)).length;
+	  			var data_id = horizon.membership.get_field_id($(obj).parent().siblings().attr('data-' + step_slug +  '-id'));
+	  			var member_el = $(obj).parent().parent();
+			
+	  			$(this).text("+");
+	  			$(this).parent().siblings(".role_options").hide();
+	  			$(".available_" + step_slug).append(member_el);
+	  			horizon.membership.remove_member_from_role(step_slug, data_id);
+			
+				// update lists
+				horizon.membership.list_filtering(step_slug);
+				horizon.membership.detect_no_results(step_slug);
+			
+				// remove input filters
+				$("input." + step_slug + "_filter").val("");
+	  		});
+	  	});
+  	},
   /*
    * Triggers on click of link to add/remove membership association.
    **/
@@ -454,6 +501,7 @@ horizon.membership = {
       horizon.membership.init_properties(step_slug);
       horizon.membership.generate_html(step_slug);
       horizon.membership.update_membership(step_slug);
+      horizon.membership.select_all(step_slug);
       horizon.membership.select_member_role(step_slug);
       horizon.membership.add_new_member(step_slug);
 

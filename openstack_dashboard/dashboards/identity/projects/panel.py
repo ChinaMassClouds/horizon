@@ -26,8 +26,9 @@ from openstack_dashboard.dashboards.identity import dashboard
 class Tenants(horizon.Panel):
     name = _("Projects")
     slug = 'projects'
-    policy_rules = (("identity", "identity:list_projects"),
-                    ("identity", "identity:list_user_projects"))
+    img = '/static/dashboard/img/nav/projects1.png'
+   # policy_rules = (("identity", "identity:list_projects"),
+   #                 ("identity", "identity:list_user_projects"))
 
 
 dashboard.Identity.register(Tenants)

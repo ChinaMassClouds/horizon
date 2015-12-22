@@ -30,6 +30,7 @@ from horizon import messages
 
 from openstack_dashboard import api
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 IMAGE_BACKEND_SETTINGS = getattr(settings, 'OPENSTACK_IMAGE_BACKEND', {})
@@ -38,8 +39,10 @@ IMAGE_FORMAT_CHOICES = IMAGE_BACKEND_SETTINGS.get('image_formats', [])
 
 class CreateImageForm(forms.SelfHandlingForm):
     name = forms.CharField(max_length=255, label=_("Name"))
-    description = forms.CharField(max_length=255, label=_("Description"),
-                                  required=False)
+    description = forms.CharField(widget=forms.widgets.Textarea(
+        attrs={'class': 'modal-body-fixed-width', 'rows': 4}),
+        label=_("Description"),
+        required=False)
 
     source_type = forms.ChoiceField(
         label=_('Image Source'),
@@ -180,9 +183,13 @@ class CreateImageForm(forms.SelfHandlingForm):
 
         try:
             image = api.glance.image_create(request, **meta)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        meta["name"] + " image create")
             messages.success(request,
                 _('Your image %s has been queued for creation.') %
                 data['name'])
+
             return image
         except Exception:
             exceptions.handle(request, _('Unable to create new image.'))
@@ -191,8 +198,11 @@ class CreateImageForm(forms.SelfHandlingForm):
 class UpdateImageForm(forms.SelfHandlingForm):
     image_id = forms.CharField(widget=forms.HiddenInput())
     name = forms.CharField(max_length=255, label=_("Name"))
-    description = forms.CharField(max_length=255, label=_("Description"),
-                                  required=False)
+    description = forms.CharField(
+        widget=forms.widgets.Textarea(),
+        label=_("Description"),
+        required=False,
+    )
     kernel = forms.CharField(
         max_length=36,
         label=_("Kernel ID"),
@@ -271,6 +281,9 @@ class UpdateImageForm(forms.SelfHandlingForm):
         try:
             image = api.glance.image_update(request, image_id, **meta)
             messages.success(request, _('Image was successfully updated.'))
+            operate_log(request.user.username,
+                        request.user.roles,
+                        meta["name"] + " image update")
             return image
         except Exception:
             exceptions.handle(request, error_updating % image_id)

@@ -20,7 +20,7 @@ from horizon import tables
 
 from openstack_dashboard import api
 from openstack_dashboard.usage import quotas
-
+from openstack_dashboard.openstack.common.log import operate_log
 
 class DeleteKeyPairs(tables.DeleteAction):
     policy_rules = (("compute", "compute_extension:keypairs:delete"),)
@@ -43,6 +43,14 @@ class DeleteKeyPairs(tables.DeleteAction):
 
     def delete(self, request, obj_id):
         api.nova.keypair_delete(request, obj_id)
+        name = "-"
+        for row in self.table.data:
+            if row.id == obj_id:
+                name = row.name
+        operate_log(request.user.username,
+                    request.user.roles,
+                    name + "keypair delete")
+
 
 
 class ImportKeyPair(tables.LinkAction):

@@ -25,6 +25,7 @@ from horizon.utils import memoized
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.networks.subnets \
     import tables as proj_tables
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 LOG = logging.getLogger(__name__)
@@ -60,6 +61,9 @@ class DeleteSubnet(proj_tables.SubnetPolicyTargetMixin, tables.DeleteAction):
                                args=[network_id])
             exceptions.handle(request, msg, redirect=redirect)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'sysadmin', 'admin')
+
 
 class CreateSubnet(proj_tables.SubnetPolicyTargetMixin, tables.LinkAction):
     name = "create"
@@ -73,6 +77,8 @@ class CreateSubnet(proj_tables.SubnetPolicyTargetMixin, tables.LinkAction):
         network_id = self.table.kwargs['network_id']
         return reverse(self.url, args=(network_id,))
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'sysadmin', 'admin')
 
 class UpdateSubnet(proj_tables.SubnetPolicyTargetMixin, tables.LinkAction):
     name = "update"
@@ -114,3 +120,24 @@ class SubnetsTable(tables.DataTable):
         verbose_name = _("Subnets")
         table_actions = (CreateSubnet, DeleteSubnet)
         row_actions = (UpdateSubnet, DeleteSubnet,)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+        if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+            self.columns['multi_select'].attrs = {'class':'hide'}
+            self.columns['actions'].attrs = {'class':'hide'}
+        return self.columns.values()

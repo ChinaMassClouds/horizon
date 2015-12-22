@@ -22,6 +22,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Defaults(horizon.Panel):
     name = _("Defaults")
     slug = 'defaults'
+    img = '/static/dashboard/img/nav/defaults1.png'
 
 
 dashboard.Admin.register(Defaults)

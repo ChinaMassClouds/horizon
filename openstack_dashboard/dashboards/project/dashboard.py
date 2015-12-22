@@ -13,13 +13,13 @@
 #    under the License.
 
 from django.utils.translation import ugettext_lazy as _
-
+from openstack_dashboard.openstack.common.log import policy_is
 import horizon
 
 
 class BasePanels(horizon.PanelGroup):
     slug = "compute"
-    name = _("Compute")
+    name = "Compute"
     panels = ('overview',
               'instances',
               'volumes',
@@ -29,7 +29,7 @@ class BasePanels(horizon.PanelGroup):
 
 class NetworkPanels(horizon.PanelGroup):
     slug = "network"
-    name = _("Network")
+    name = "Network"
     panels = ('network_topology',
               'networks',
               'routers',
@@ -71,6 +71,11 @@ class DataProcessingPanels(horizon.PanelGroup):
               'data_processing.data_plugins',)
 
 
+class ApplyPanels(horizon.PanelGroup):
+    slug = "apply"
+    name = "Apply"
+    panels = ('applyhost', 'applydisk')
+
 class Project(horizon.Dashboard):
     name = _("Project")
     slug = "project"
@@ -80,9 +85,18 @@ class Project(horizon.Dashboard):
         ObjectStorePanels,
         OrchestrationPanels,
         DatabasePanels,
-        DataProcessingPanels,)
+        DataProcessingPanels,
+        ApplyPanels)
     default_panel = 'overview'
+    img = '/static/dashboard/img/nav/Dashboard_project.png'
     supports_tenants = True
+
+    def nav(self, context):
+        username = context['request'].user.username
+        return not(policy_is(username,
+                             'appradmin',
+                             'auditadmin',
+                             'sysadmin'))
 
 
 horizon.register(Project)

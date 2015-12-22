@@ -17,15 +17,16 @@ import json
 
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.debug import sensitive_variables  # noqa
-
 from horizon import exceptions
 from horizon import forms
 from horizon import workflows
+
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.instances \
     import utils as instance_utils
-from openstack_dashboard.dashboards.project.instances.workflows \
+from openstack_dashboard.dashboards.project.applyhost.workflows \
     import create_instance
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 class SetFlavorChoiceAction(workflows.Action):
@@ -102,6 +103,9 @@ class ResizeInstance(workflows.Workflow):
         disk_config = context.get('disk_config', None)
         try:
             api.nova.server_resize(request, instance_id, flavor, disk_config)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        context["name"]+" instance resize")
             return True
         except Exception:
             exceptions.handle(request)

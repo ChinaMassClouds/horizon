@@ -21,21 +21,25 @@ from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
-
 from horizon import exceptions
 from horizon import forms
 from horizon import tables
 from horizon.utils import memoized
-
+from openstack_dashboard.openstack.common import choices
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.admin.instances \
     import forms as project_forms
 from openstack_dashboard.dashboards.admin.instances \
     import tables as project_tables
 from openstack_dashboard.dashboards.project.instances import views
-from openstack_dashboard.dashboards.project.instances.workflows \
+from openstack_dashboard.dashboards.project.applyhost.workflows \
     import update_instance
 
+from openstack_dashboard.dashboards.admin.controlcenter import views as controlcenter_views
+from openstack_dashboard.openstack.common.requestapi import RequestApi,def_vcenter_vms,def_cserver_vms
+import logging
+
+LOG = logging.getLogger(__name__)
 
 # re-use console from project.instances.views to make reflection work
 def console(args, **kvargs):
@@ -68,21 +72,53 @@ class AdminIndexView(tables.DataTableView):
     def has_more_data(self, table):
         return self._more
 
+    def has_prev_data(self, table):
+        return self._prev
+    
+    def get_vcenter_uuid_maps_info(self):
+        try:
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/vcenter/uuid_maps') or []
+            return uuid_maps
+        except Exception:
+            return {}
+
+    def get_cserver_uuid_maps_info(self):
+        try:
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/cserver/uuid_maps') or []
+            return uuid_maps
+        except Exception:
+            return {}
+
+    def get_heterogeneous_plat(self, request):
+        zarr = []
+        heterogeneous_plat = controlcenter_views.get_heterogeneous_plat(request)
+        for i in heterogeneous_plat:
+            zarr.append((i.domain_name,i.virtualplatformtype,i.name))
+        return zarr
+
     def get_data(self):
         instances = []
         marker = self.request.GET.get(
             project_tables.AdminInstancesTable._meta.pagination_param, None)
-        search_opts = self.get_filters({'marker': marker, 'paginate': True})
+        prev_marker = self.request.GET.get(
+            project_tables.AdminInstancesTable._meta.prev_pagination_param, None)
+        search_opts = self.get_filters({'marker': marker,'prev_marker': prev_marker, 'paginate': True})
         try:
-            instances, self._more = api.nova.server_list(
+            instances, self._more, self._prev = api.nova.server_list_with_prev(
                 self.request,
                 search_opts=search_opts,
                 all_tenants=True)
+
         except Exception:
             self._more = False
             exceptions.handle(self.request,
                               _('Unable to retrieve instance list.'))
+
         if instances:
+            vcenter_uuid_maps_info = self.get_vcenter_uuid_maps_info()
+            cserver_uuid_maps_info = self.get_cserver_uuid_maps_info()
             try:
                 api.network.servers_update_addresses(self.request, instances,
                                                      all_tenants=True)
@@ -109,9 +145,81 @@ class AdminIndexView(tables.DataTableView):
 
             full_flavors = SortedDict([(f.id, f) for f in flavors])
             tenant_dict = SortedDict([(t.id, t) for t in tenants])
+            
+            # zhangdebo
+            zarr = []
+            zarr_got = False
+            vcenter_vms = []
+            cserver_vms = []
+            vcenter_vms_got = False
+            cserver_vms_got = False
+            
             # Loop through instances to get flavor and tenant info.
             for inst in instances:
-                flavor_id = inst.flavor["id"]
+                inst.virtualplatformtype = 'Openstack'
+#                 for i in zarr:
+#                     if i[0] == getattr(inst,'OS-EXT-AZ:availability_zone',''):
+                if inst.metadata and inst.metadata.get('platformtype'):
+                    inst.virtualplatformtype = inst.metadata.get('platformtype')
+                    if inst.virtualplatformtype == 'vcenter':
+                        setattr(inst,'OS-EXT-SRV-ATTR:host','-')
+                        if not vcenter_vms_got:
+                            if not zarr_got:
+                                zarr = self.get_heterogeneous_plat(self.request)
+                                zarr_got = True
+                            for i in zarr:
+                                if i[0] == getattr(inst,'OS-EXT-AZ:availability_zone',''):
+                                    vcenter_vms += def_vcenter_vms(i[2])
+                                    vcenter_vms_got = True
+                                    break
+                        for v in vcenter_vms:
+                            if v.get('id') == inst.id:
+                                setattr(inst,'OS-EXT-SRV-ATTR:host',v.get('host'))
+                                break
+                    elif inst.virtualplatformtype == 'cserver':
+                        setattr(inst,'OS-EXT-SRV-ATTR:host','-')
+                        if not cserver_vms_got:
+                            if not zarr_got:
+                                zarr = self.get_heterogeneous_plat(self.request)
+                                zarr_got = True
+                            for i in zarr:
+                                if i[0] == getattr(inst,'OS-EXT-AZ:availability_zone',''):
+                                    cserver_vms += def_cserver_vms(i[2])
+                                    cserver_vms_got = True
+                        for v in cserver_vms:
+                            if v.get('openstack_uuid') == inst.id:
+                                setattr(inst,'OS-EXT-SRV-ATTR:host',v.get('hostname'))
+                                break
+#                         break
+
+                if getattr(inst,'virtualplatformtype','') == 'vcenter':
+                    if vcenter_uuid_maps_info.get(inst.id):
+                        flavor_id = vcenter_uuid_maps_info.get(inst.id).get('flavor_id') or inst.flavor["id"]
+                        for i in inst.addresses.keys():
+                            for j in inst.addresses[i]:
+                                j['addr'] = vcenter_uuid_maps_info.get(inst.id).get('ip') or ''
+                    else:
+                        flavor_id = inst.flavor["id"]
+                        for i in inst.addresses.keys():
+                            for j in inst.addresses[i]:
+                                j['addr'] = ''
+                elif getattr(inst,'virtualplatformtype','') == 'cserver':
+                    if cserver_uuid_maps_info.get(inst.id):
+                        flavor_id = cserver_uuid_maps_info.get(inst.id).get('flavor_id') or ''
+                        for i in inst.addresses.keys():
+                            for j in inst.addresses[i]:
+                                j['addr'] = cserver_uuid_maps_info.get(inst.id).get('ip') or ''
+                    else:
+                        flavor_id = ''
+                        for i in inst.addresses.keys():
+                            for j in inst.addresses[i]:
+                                j['addr'] = ''
+                else:
+                    flavor_id = inst.flavor["id"]
+                    
+                if getattr(inst,'virtualplatformtype',''):
+                    inst.virtualplatformtype = choices.translate(choices.CHOICES_VIRTUAL_TYPE,inst.virtualplatformtype) 
+                    
                 try:
                     if flavor_id in full_flavors:
                         inst.full_flavor = full_flavors[flavor_id]
@@ -121,8 +229,9 @@ class AdminIndexView(tables.DataTableView):
                         inst.full_flavor = api.nova.flavor_get(
                             self.request, flavor_id)
                 except Exception:
-                    msg = _('Unable to retrieve instance size information.')
-                    exceptions.handle(self.request, msg)
+                    pass
+#                     msg = _('Unable to retrieve instance size information.')
+#                     exceptions.handle(self.request, msg)
                 tenant = tenant_dict.get(inst.tenant_id, None)
                 inst.tenant_name = getattr(tenant, "name", None)
         return instances

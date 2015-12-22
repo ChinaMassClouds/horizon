@@ -13,7 +13,6 @@
 import json
 import logging
 
-from django.utils import html
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.debug import sensitive_variables  # noqa
 
@@ -291,7 +290,7 @@ class CreateStackForm(forms.SelfHandlingForm):
             field_args = {
                 'initial': param.get('Default', None),
                 'label': param.get('Label', param_key),
-                'help_text': html.escape(param.get('Description', '')),
+                'help_text': param.get('Description', ''),
                 'required': param.get('Default', None) is None
             }
 

@@ -23,6 +23,7 @@ from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.instances \
     import tables as project_tables
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class AdminEditInstance(project_tables.EditInstance):
@@ -118,8 +119,7 @@ class AdminInstancesTable(tables.DataTable):
     # returned in a practical manner by the API.
     # user = tables.Column("user_id", verbose_name=_("User"))
     host = tables.Column("OS-EXT-SRV-ATTR:host",
-                         verbose_name=_("Host"),
-                         classes=('nowrap-col',))
+                         verbose_name=_("Host"))
     name = tables.Column("name",
                          link=("horizon:admin:instances:detail"),
                          verbose_name=_("Name"))
@@ -130,7 +130,6 @@ class AdminInstancesTable(tables.DataTable):
                        attrs={'data-type': "ip"})
     size = tables.Column(project_tables.get_size,
                          verbose_name=_("Size"),
-                         classes=('nowrap-col',),
                          attrs={'data-type': 'size'})
     status = tables.Column("status",
                            filters=(title, filters.replace_underscores),
@@ -139,6 +138,10 @@ class AdminInstancesTable(tables.DataTable):
                            status_choices=STATUS_CHOICES,
                            display_choices=
                                project_tables.STATUS_DISPLAY_CHOICES)
+    az = tables.Column("availability_zone",
+                       verbose_name=_("Availability Zone"))
+    virtualplatformtype = tables.Column("virtualplatformtype",
+                       verbose_name=_("Virtual Platform Type"))
     task = tables.Column("OS-EXT-STS:task_state",
                          verbose_name=_("Task"),
                          filters=(title, filters.replace_underscores),
@@ -152,8 +155,8 @@ class AdminInstancesTable(tables.DataTable):
                             verbose_name=_("Time since created"),
                             filters=(filters.parse_isotime,
                                      filters.timesince_sortable),
-                            attrs={'data-type': 'timesince'})
-
+                            attrs={'data-type': 'timesince'},
+                            )
     class Meta:
         name = "instances"
         verbose_name = _("Instances")
@@ -161,7 +164,8 @@ class AdminInstancesTable(tables.DataTable):
         table_actions = (project_tables.TerminateInstance,
                          AdminInstanceFilterAction)
         row_class = AdminUpdateRow
-        row_actions = (project_tables.ConfirmResize,
+        row_actions = (project_tables.StartInstance,
+                       project_tables.ConfirmResize,
                        project_tables.RevertResize,
                        AdminEditInstance,
                        project_tables.ConsoleLink,
@@ -171,6 +175,31 @@ class AdminInstancesTable(tables.DataTable):
                        project_tables.ToggleSuspend,
                        MigrateInstance,
                        LiveMigrateInstance,
+                       project_tables.StopInstance,
                        project_tables.SoftRebootInstance,
                        project_tables.RebootInstance,
                        project_tables.TerminateInstance)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+       if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+           self.columns['multi_select'].attrs = {'class':'hide'}
+           self.columns['actions'].attrs = {'class':'hide'}
+       return self.columns.values()
+
+
+

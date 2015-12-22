@@ -216,7 +216,7 @@ def get_service_from_catalog(catalog, service_type):
 
 
 def get_version_from_service(service):
-    if service and service.get('endpoints'):
+    if service:
         endpoint = service['endpoints'][0]
         if 'interface' in endpoint:
             return 3

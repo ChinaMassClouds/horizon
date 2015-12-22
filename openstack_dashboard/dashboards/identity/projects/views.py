@@ -84,6 +84,12 @@ class IndexView(tables.DataTableView):
                     domain=domain_context,
                     paginate=True,
                     marker=marker)
+                i = 0
+                for row in tenants:
+                    if row.name =='admin':
+                        del tenants[i]
+                    i += 1
+
             except Exception:
                 self._more = False
                 exceptions.handle(self.request,
@@ -150,14 +156,14 @@ class CreateProjectView(workflows.WorkflowView):
             except Exception:
                 error_msg = _('Unable to retrieve default Neutron quota '
                               'values.')
-                self.add_error_to_step(error_msg, 'create_quotas')
+                self.add_error_to_step(error_msg, 'update_quotas')
 
             for field in quotas.QUOTA_FIELDS:
                 initial[field] = quota_defaults.get(field).limit
 
         except Exception:
             error_msg = _('Unable to retrieve default quota values.')
-            self.add_error_to_step(error_msg, 'create_quotas')
+            self.add_error_to_step(error_msg, 'update_quotas')
 
         return initial
 

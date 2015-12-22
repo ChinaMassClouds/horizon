@@ -22,7 +22,8 @@ from openstack_dashboard.dashboards.settings import dashboard
 class PasswordPanel(horizon.Panel):
     name = _("Change Password")
     slug = 'password'
-    policy_rules = (("identity", "identity:change_password"),)
+    img = '/static/dashboard/img/nav/password1.png'
+    #policy_rules = (("identity", "identity:change_password"),)
 
 
 dashboard.Settings.register(PasswordPanel)

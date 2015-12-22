@@ -19,24 +19,20 @@
 """
 Views for managing instances.
 """
-import logging
-
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django import http
 from django import shortcuts
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
-
 from horizon import exceptions
 from horizon import forms
 from horizon import tables
 from horizon import tabs
 from horizon.utils import memoized
 from horizon import workflows
-
+from horizon import messages
 from openstack_dashboard import api
-
 from openstack_dashboard.dashboards.project.instances \
     import console as project_console
 from openstack_dashboard.dashboards.project.instances \
@@ -45,11 +41,18 @@ from openstack_dashboard.dashboards.project.instances \
     import tables as project_tables
 from openstack_dashboard.dashboards.project.instances \
     import tabs as project_tabs
-from openstack_dashboard.dashboards.project.instances \
-    import workflows as project_workflows
+from openstack_dashboard.dashboards.project.instances import workflows as project_workflows
+from openstack_dashboard.openstack.common.log import policy_is
+from openstack_dashboard.openstack.common.requestapi import RequestApi
+from openstack_dashboard.openstack.common.dictutils import DictList2ObjectList
+from openstack_dashboard.openstack.common.choices import _translate as choices_translate
+from openstack_dashboard.openstack.common.choices import CHOICES_VIRTUAL_TYPE 
+from openstack_dashboard.dashboards.admin.controlcenter.views import _get_heterogeneous_plat
+from openstack_dashboard.openstack.common.requestapi import RequestApi
+from openstack_dashboard.openstack.common import choices
+import logging
 
 LOG = logging.getLogger(__name__)
-
 
 class IndexView(tables.DataTableView):
     table_class = project_tables.InstancesTable
@@ -57,6 +60,25 @@ class IndexView(tables.DataTableView):
 
     def has_more_data(self, table):
         return self._more
+    
+    def has_prev_data(self, table):
+        return self._prev
+
+    def get_vcenter_uuid_maps_info(self):
+        try:
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/vcenter/uuid_maps') or []
+            return uuid_maps
+        except Exception:
+            return {}
+
+    def get_cserver_uuid_maps_info(self):
+        try:
+            request_api = RequestApi()
+            uuid_maps = request_api.getRequestInfo('api/heterogeneous/platforms/cserver/uuid_maps') or []
+            return uuid_maps
+        except Exception:
+            return {}
 
     def get_data(self):
         marker = self.request.GET.get(
@@ -64,7 +86,7 @@ class IndexView(tables.DataTableView):
         search_opts = self.get_filters({'marker': marker, 'paginate': True})
         # Gather our instances
         try:
-            instances, self._more = api.nova.server_list(
+            instances, self._more, self._prev = api.nova.server_list_with_prev(
                 self.request,
                 search_opts=search_opts)
         except Exception:
@@ -74,6 +96,8 @@ class IndexView(tables.DataTableView):
                               _('Unable to retrieve instances.'))
 
         if instances:
+            vcenter_uuid_maps_info = self.get_vcenter_uuid_maps_info()
+            cserver_uuid_maps_info = self.get_cserver_uuid_maps_info()
             try:
                 api.network.servers_update_addresses(self.request, instances)
             except Exception:
@@ -102,16 +126,49 @@ class IndexView(tables.DataTableView):
             image_map = SortedDict([(str(image.id), image)
                                     for image in images])
 
+
             # Loop through instances to get flavor info.
             for instance in instances:
+                instance.virtualplatformtype = 'Openstack'
+                if instance.metadata and instance.metadata.get('platformtype'):
+                    instance.virtualplatformtype = instance.metadata.get('platformtype')
+
                 if hasattr(instance, 'image'):
                     # Instance from image returns dict
                     if isinstance(instance.image, dict):
                         if instance.image.get('id') in image_map:
                             instance.image = image_map[instance.image['id']]
 
-                try:
+                if getattr(instance,'virtualplatformtype','') == 'vcenter':
+                    if vcenter_uuid_maps_info.get(instance.id):
+                        flavor_id = vcenter_uuid_maps_info.get(instance.id).get('flavor_id') or instance.flavor["id"]
+                        for i in instance.addresses.keys():
+                            for j in instance.addresses[i]:
+                                j['addr'] = vcenter_uuid_maps_info.get(instance.id).get('ip') or ''
+                    else:
+                        flavor_id = instance.flavor["id"]
+                        for i in instance.addresses.keys():
+                            for j in instance.addresses[i]:
+                                j['addr'] = ''
+                elif getattr(instance,'virtualplatformtype','') == 'cserver':
+                    if cserver_uuid_maps_info.get(instance.id):
+                        flavor_id = cserver_uuid_maps_info.get(instance.id).get('flavor_id') or ''
+                        for i in instance.addresses.keys():
+                            for j in instance.addresses[i]:
+                                j['addr'] = cserver_uuid_maps_info.get(instance.id).get('ip') or ''
+                    else:
+                        flavor_id = ''
+                        for i in instance.addresses.keys():
+                            for j in instance.addresses[i]:
+                                j['addr'] = ''
+                else:
                     flavor_id = instance.flavor["id"]
+                
+                if getattr(instance,'virtualplatformtype',''):
+                    instance.virtualplatformtype = choices.translate(choices.CHOICES_VIRTUAL_TYPE,instance.virtualplatformtype) 
+                    
+                try:
+#                     flavor_id = instance.flavor["id"]
                     if flavor_id in full_flavors:
                         instance.full_flavor = full_flavors[flavor_id]
                     else:
@@ -120,19 +177,18 @@ class IndexView(tables.DataTableView):
                         instance.full_flavor = api.nova.flavor_get(
                             self.request, flavor_id)
                 except Exception:
-                    msg = ('Unable to retrieve flavor "%s" for instance "%s".'
-                           % (flavor_id, instance.id))
-                    LOG.info(msg)
+                    pass
+#                     msg = _('Unable to retrieve instance size information.')
+#                     exceptions.handle(self.request, msg)
         return instances
 
     def get_filters(self, filters):
+        filter_field = self.table.get_filter_field()
         filter_action = self.table._meta._filter_action
-        if filter_action:
-            filter_field = self.table.get_filter_field()
-            if filter_action.is_api_filter(filter_field):
-                filter_string = self.table.get_filter_string()
-                if filter_field and filter_string:
-                    filters[filter_field] = filter_string
+        if filter_action.is_api_filter(filter_field):
+            filter_string = self.table.get_filter_string()
+            if filter_field and filter_string:
+                filters[filter_field] = filter_string
         return filters
 
 
@@ -259,15 +315,32 @@ class DetailView(tabs.TabView):
 
     def get_context_data(self, **kwargs):
         context = super(DetailView, self).get_context_data(**kwargs)
-        context["instance"] = self.get_data()
+        instance = self.get_data()
+        context["instance"] = instance
+        table = project_tables.InstancesTable(self.request)
+        context["url"] = reverse(self.redirect_url)
+        roles = self.request.user.roles
+        if len(roles)>=2:
+            role = roles[1]['name'] if roles[0]['name']=='_member_' else roles[0]['name']
+        else:
+            role = '_member_'
+        if policy_is(self.request.user.username, 'admin', 'sysadmin') or role!='admin':
+            context["actions"] = table.render_row_actions(instance)
         return context
 
     @memoized.memoized_method
     def get_data(self):
-        instance_id = self.kwargs['instance_id']
-
         try:
+            instance_id = self.kwargs['instance_id']
             instance = api.nova.server_get(self.request, instance_id)
+            instance.volumes = api.nova.instance_volumes_list(self.request,
+                                                              instance_id)
+            # Sort by device name
+            instance.volumes.sort(key=lambda vol: vol.device)
+            instance.full_flavor = api.nova.flavor_get(
+                self.request, instance.flavor["id"])
+            instance.security_groups = api.network.server_security_groups(
+                self.request, instance_id)
         except Exception:
             redirect = reverse(self.redirect_url)
             exceptions.handle(self.request,
@@ -277,41 +350,6 @@ class DetailView(tabs.TabView):
             # Not all exception types handled above will result in a redirect.
             # Need to raise here just in case.
             raise exceptions.Http302(redirect)
-
-        status_label = [label for (value, label) in
-                        project_tables.STATUS_DISPLAY_CHOICES
-                        if value.lower() == (instance.status or '').lower()]
-        if status_label:
-            instance.status_label = status_label[0]
-        else:
-            instance.status_label = instance.status
-
-        try:
-            instance.volumes = api.nova.instance_volumes_list(self.request,
-                                                              instance_id)
-            # Sort by device name
-            instance.volumes.sort(key=lambda vol: vol.device)
-        except Exception:
-            msg = _('Unable to retrieve volume list for instance '
-                    '"%s".') % instance_id
-            exceptions.handle(self.request, msg, ignore=True)
-
-        try:
-            instance.full_flavor = api.nova.flavor_get(
-                self.request, instance.flavor["id"])
-        except Exception:
-            msg = _('Unable to retrieve flavor information for instance '
-                    '"%s".') % instance_id,
-            exceptions.handle(self.request, msg, ignore=True)
-
-        try:
-            instance.security_groups = api.network.server_security_groups(
-                self.request, instance_id)
-        except Exception:
-            msg = _('Unable to retrieve security groups for instance '
-                    '"%s".') % instance_id
-            exceptions.handle(self.request, msg, ignore=True)
-
         try:
             api.network.servers_update_addresses(self.request, [instance])
         except Exception:
@@ -319,7 +357,12 @@ class DetailView(tabs.TabView):
                 self.request,
                 _('Unable to retrieve IP addresses from Neutron for instance '
                   '"%s".') % instance_id, ignore=True)
-
+        roles = self.request.user.roles
+        if len(roles)>=2:
+            role = roles[1]['name'] if roles[0]['name']=='_member_' else roles[0]['name']
+        else:
+            role = '_member_'
+        instance.roles = role
         return instance
 
     def get_tabs(self, request, *args, **kwargs):
@@ -341,23 +384,17 @@ class ResizeView(workflows.WorkflowView):
         instance_id = self.kwargs['instance_id']
         try:
             instance = api.nova.server_get(self.request, instance_id)
+            flavor_id = instance.flavor['id']
+            flavors = self.get_flavors()
+            if flavor_id in flavors:
+                instance.flavor_name = flavors[flavor_id].name
+            else:
+                flavor = api.nova.flavor_get(self.request, flavor_id)
+                instance.flavor_name = flavor.name
         except Exception:
             redirect = reverse("horizon:project:instances:index")
             msg = _('Unable to retrieve instance details.')
             exceptions.handle(self.request, msg, redirect=redirect)
-        flavor_id = instance.flavor['id']
-        flavors = self.get_flavors()
-        if flavor_id in flavors:
-            instance.flavor_name = flavors[flavor_id].name
-        else:
-            try:
-                flavor = api.nova.flavor_get(self.request, flavor_id)
-                instance.flavor_name = flavor.name
-            except Exception:
-                msg = _('Unable to retrieve flavor information for instance '
-                        '"%s".') % instance_id
-                exceptions.handle(self.request, msg, ignore=True)
-                instance.flavor_name = _("Not available")
         return instance
 
     @memoized.memoized_method

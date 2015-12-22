@@ -66,7 +66,14 @@ class IndexView(tables.DataTableView):
         else:
             msg = _("Insufficient privilege level to view user information.")
             messages.info(self.request, msg)
-        return users
+
+        res_users = []
+        for user in users:
+            if user.username not in ['syncadmin', 'admin', 'sysadmin', 'auditadmin', 'appradmin',
+                                 'nova','neutron','cinder','ceilometer','glance']:
+                res_users.append(user)
+
+        return res_users
 
 
 class UpdateView(forms.ModalFormView):
@@ -130,6 +137,11 @@ class CreateView(forms.ModalFormView):
         kwargs = super(CreateView, self).get_form_kwargs()
         try:
             roles = api.keystone.role_list(self.request)
+            i = 0
+            for role in roles:
+                if role.name == 'admin':
+                    del roles[i]
+                i += 1
         except Exception:
             redirect = reverse("horizon:identity:users:index")
             exceptions.handle(self.request,

@@ -26,7 +26,7 @@ from horizon import forms
 from horizon import messages
 
 from openstack_dashboard import api
-
+from openstack_dashboard.openstack.common.log import operate_log
 
 LOG = logging.getLogger(__name__)
 
@@ -48,6 +48,9 @@ class UpdateNetwork(forms.SelfHandlingForm):
                       'name': data['name']}
             network = api.neutron.network_update(request, data['network_id'],
                                                  **params)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + " network updated")
             msg = _('Network %s was successfully updated.') % data['name']
             LOG.debug(msg)
             messages.success(request, msg)

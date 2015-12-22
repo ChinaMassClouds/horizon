@@ -160,6 +160,141 @@
 
  */
 
+Rickshaw.namespace('Rickshaw.Fixtures.Time');
+Rickshaw.Fixtures.Time = function() {
+    var self = this;
+    this.months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    this.units = [{
+        name: 'decade',
+        seconds: 86400 * 365.25 * 10,
+        formatter: function(d) {
+            return (parseInt(d.getUTCFullYear() / 10, 10) * 10)
+        }
+    },
+    {
+        name: 'year',
+        seconds: 86400 * 365.25,
+        formatter: function(d) {
+            return d.getUTCFullYear()
+        }
+    },
+    {
+        name: 'month',
+        seconds: 86400 * 30.5,
+        formatter: function(d) {
+            return self.months[d.getUTCMonth()]
+        }
+    },
+    {
+        name: 'week',
+        seconds: 86400 * 7,
+        formatter: function(d) {
+            return self.formatDate(d)
+        }
+    },
+    {
+        name: 'day',
+        seconds: 86400,
+        formatter: function(d) {
+            return d.getUTCDate()
+        }
+    },
+    {
+        name: '6 hour',
+        seconds: 3600 * 6,
+
+        formatter: function(d) {
+            return self.formatTime(d)
+        }
+    },
+    {
+        name: 'hour',
+        seconds: 3600,
+        formatter: function(d) {
+            return self.formatTime(d)
+        }
+    },
+    {
+        name: '15 minute',
+        seconds: 60 * 15,
+        formatter: function(d) {
+            return self.formatTime(d)
+        }
+    },
+    {
+        name: 'minute',
+        seconds: 60,
+        formatter: function(d) {
+            return d.getUTCMinutes()
+        }
+    },
+    {
+        name: '15 second',
+        seconds: 15,
+        formatter: function(d) {
+            return d.getUTCSeconds() + 's'
+        }
+    },
+    {
+        name: 'second',
+        seconds: 1,
+        formatter: function(d) {
+            return d.getUTCSeconds() + 's'
+        }
+    },
+    {
+        name: 'decisecond',
+        seconds: 1 / 10,
+        formatter: function(d) {
+            return d.getUTCMilliseconds() + 'ms'
+        }
+    },
+    {
+        name: 'centisecond',
+        seconds: 1 / 100,
+        formatter: function(d) {
+            return d.getUTCMilliseconds() + 'ms'
+        }
+    }];
+    this.unit = function(unitName) {
+        return this.units.filter(function(unit) {
+            return unitName == unit.name
+        }).shift();
+    };
+    this.formatDate = function(d) {
+        return d3.time.format('%b %e')(d);
+    };
+    this.formatTime = function(d) {
+        return d.toLocaleString().match(/(\d+:\d+):/)[1];
+    };
+    this.ceil = function(time, unit) {
+        var date, floor, year;
+        if (unit.name == 'month') {
+            date = new Date(time * 1000);
+            floor = Date.UTC(date.getUTCFullYear(), date.getUTCMonth()) / 1000;
+            if (floor == time) return time;
+            year = date.getUTCFullYear();
+            var month = date.getUTCMonth();
+            if (month == 11) {
+                month = 0;
+                year = year + 1;
+            } else {
+                month += 1;
+            }
+            return Date.UTC(year, month) / 1000;
+        }
+        if (unit.name == 'year') {
+            date = new Date(time * 1000);
+            floor = Date.UTC(date.getUTCFullYear(), 0) / 1000;
+            if (floor == time) return time;
+            year = date.getUTCFullYear() + 1;
+            return Date.UTC(year, 0) / 1000;
+        }
+        return Math.ceil(time / unit.seconds) * unit.seconds;
+    };
+};
+
+ 
 Rickshaw.namespace('Rickshaw.Graph.Renderer.StaticAxes');
 Rickshaw.Graph.Renderer.StaticAxes = Rickshaw.Class.create( Rickshaw.Graph.Renderer.Line, {
   name: 'StaticAxes',
@@ -180,9 +315,9 @@ Rickshaw.Graph.Renderer.StaticAxes = Rickshaw.Class.create( Rickshaw.Graph.Rende
     }
     // If x axis wants to have static range, not based on data
     if (this.xMin !== undefined && this.xMax !== undefined){
-      xMin = d3.time.format.utc('%Y-%m-%dT%H:%M:%S').parse(this.xMin);
+      xMin = d3.time.format('%Y-%m-%dT%H:%M:%S').parse(this.xMin);
       xMin = xMin.getTime() / 1000;
-      xMax = d3.time.format.utc('%Y-%m-%dT%H:%M:%S').parse(this.xMax);
+      xMax = d3.time.format('%Y-%m-%dT%H:%M:%S').parse(this.xMax);
       xMax = xMax.getTime() / 1000;
 
       ret.x = [xMin, xMax];
@@ -260,6 +395,7 @@ horizon.d3_line_chart = {
       self.settings = {};
       self.settings.renderer = 'line';
       self.settings.auto_size = true;
+      self.settings.loading_effect = true; // zhangdebo 
       self.settings.axes_x = true;
       self.settings.axes_y = true;
       self.settings.axes_y_label = true;
@@ -310,7 +446,7 @@ horizon.d3_line_chart = {
       var allowed_settings = ['renderer', 'auto_size', 'axes_x', 'axes_y',
         'interpolation', 'yMin', 'yMax', 'xMin', 'xMax', 'bar_chart_settings',
         'bar_chart_selector', 'composed_chart_selector',
-        'higlight_last_point', 'axes_y_label'];
+        'higlight_last_point', 'axes_y_label','loading_effect']; // zhangdebo add 'loading_effect'
 
       jQuery.each(allowed_settings, function(index, setting_name) {
         if (settings[setting_name] !== undefined){
@@ -376,8 +512,9 @@ horizon.d3_line_chart = {
      */
     self.refresh = function (){
       var self = this;
-
-      self.start_loading();
+      if(self.settings.loading_effect){ // zhangdebo
+    	  self.start_loading();
+      }
       horizon.ajax.queue({
         url: self.final_url,
         success: function (data, textStatus, jqXHR) {
@@ -426,7 +563,7 @@ horizon.d3_line_chart = {
         serie.color = last_point_color = self.color(serie.name);
         $.map(serie.data, function (statistic) {
           // need to parse each date
-          statistic.x = d3.time.format.utc('%Y-%m-%dT%H:%M:%S').parse(statistic.x);
+          statistic.x = d3.time.format('%Y-%m-%dT%H:%M:%S').parse(statistic.x);
           statistic.x = statistic.x.getTime() / 1000;
           last_point = statistic;
           last_point.color = serie.color;
@@ -477,16 +614,7 @@ horizon.d3_line_chart = {
         var hoverDetail = new Rickshaw.Graph.HoverDetail({
           graph: graph,
           formatter: function(series, x, y) {
-            var d = new Date(x * 1000);
-            // Convert datetime to YYYY-MM-DD HH:MM:SS GMT
-            var datetime_string = d.getUTCFullYear() + "-" +
-              ("00" + (d.getUTCMonth() + 1)).slice(-2) + "-" +
-              ("00" + d.getUTCDate()).slice(-2) + " " +
-              ("00" + d.getUTCHours()).slice(-2) + ":" +
-              ("00" + d.getUTCMinutes()).slice(-2) + ":" +
-              ("00" + d.getUTCSeconds()).slice(-2) + " GMT";
-
-            var date = '<span class="date">' + datetime_string + '</span>';
+            var date = '<span class="date">' + new Date(x * 1000).toLocaleString() + '</span>';
             var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
             var content = swatch + series.name + ': ' + parseFloat(y).toFixed(2) + ' ' + series.unit + '<br>' + date;
             return content;
@@ -577,7 +705,7 @@ horizon.d3_line_chart = {
       $(self.html_element).find('.spinner_wrapper').remove();
 
       // Display the backdrop that will be over the chart.
-      self.backdrop = $('<div class="modal-backdrop"></div>');
+      self.backdrop = $('<div class="modal-backdrop" style="min-height:150px"></div>');
       self.backdrop.css('width', self.width).css('height', self.height);
       $(self.html_element).append(self.backdrop);
 

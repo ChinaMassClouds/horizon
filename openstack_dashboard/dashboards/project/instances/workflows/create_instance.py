@@ -19,7 +19,7 @@
 import json
 import logging
 import operator
-
+import uuid
 from django.template.defaultfilters import filesizeformat  # noqa
 from django.utils.text import normalize_newlines  # noqa
 from django.utils.translation import ugettext_lazy as _
@@ -41,7 +41,9 @@ from openstack_dashboard.dashboards.project.images \
     import utils as image_utils
 from openstack_dashboard.dashboards.project.instances \
     import utils as instance_utils
-
+from openstack_dashboard.openstack.common.requestapi import RequestApi
+from openstack_dashboard.openstack.common.log import operate_log
+from openstack_dashboard.openstack.common.choices import CSERVER_TEMPLATES_BLACK_LIST
 
 LOG = logging.getLogger(__name__)
 
@@ -74,7 +76,18 @@ class SelectProjectUser(workflows.Step):
 
 
 class SetInstanceDetailsAction(workflows.Action):
+    flavor_vcpus = forms.CharField(widget=forms.HiddenInput,required=False)
+    flavor_ram = forms.CharField(widget=forms.HiddenInput,required=False)
+    
     availability_zone = forms.ChoiceField(label=_("Availability Zone"),
+                                          required=False)
+
+    availability_zone_info = forms.CharField(widget=forms.HiddenInput,required=False)
+
+    cluster_id = forms.ChoiceField(label=_("Cluster"),
+                                          required=False)
+
+    template_id = forms.ChoiceField(label=_("Template"),
                                           required=False)
 
     name = forms.CharField(label=_("Instance Name"),
@@ -158,9 +171,129 @@ class SetInstanceDetailsAction(workflows.Action):
             source_type_choices.append(("volume_snapshot_id",
                     _("Boot from volume snapshot (creates a new volume)")))
         self.fields['source_type'].choices = source_type_choices
+        
+        availability_zone_info = self.get_availability_zone_info()
+        if availability_zone_info and type(availability_zone_info) == type({}):
+            self.fields['availability_zone_info'].initial = availability_zone_info.get('res')
+            self.fields['template_id'].choices = availability_zone_info.get('all_templates')
+            self.fields['cluster_id'].choices = availability_zone_info.get('all_clusters')
+        
+    def get_availability_zone_info(self):
+        res = {}
+        def_res = {}
+        try:
+            source_domains = api.nova.availability_zone_list(self.request)
+            if not source_domains:
+                return def_res
+            plats = []
+            try:
+                request_api = RequestApi()
+                plats = request_api.getRequestInfo('api/heterogeneous/platforms')
+                if not plats or type(plats) != type([]):
+                    plats = []
+            except Exception:
+                plats = []
+            if not plats:
+                return def_res
+            all_clusters = []
+            all_templates = []
+            for sd in source_domains:
+                for pl in plats:
+                    if pl.get('domain_name') == sd.zoneName:
+                        vtype = pl.get('virtualplatformtype')
+                        templates = request_api.getRequestInfo('api/heterogeneous/platforms/'+vtype+'/templates',
+                                                               {'name':pl.get('name')}) or []
+                        templates = [t for t in templates if t.get('name') not in CSERVER_TEMPLATES_BLACK_LIST]
+                        _clusters = request_api.getRequestInfo('api/heterogeneous/platforms/'+vtype+'/clusters',
+                                                               {'name':pl.get('name')}) or []
+                        all_clusters += [(c.get('id'),c.get('name')) for c in _clusters]
+                        all_templates += [(c.get('id'),c.get('name')) for c in templates]
+                        clusters = [{'id':c.get('id'),'name':c.get('name')} for c in _clusters]
+                        res[sd.zoneName] = {'vtype':vtype,
+                                                     'clusters':clusters,
+                                                     'templates':templates}
+                        break
 
+            return {'res':json.dumps(res),
+                   'all_clusters':all_clusters,
+                   'all_templates':all_templates
+                   }
+        except Exception:
+            res = _('Unable to get vtype|clusters|templates info of source domain.') 
+            exceptions.handle(self.request, ignore=True)
+            return def_res
+    
+    def get_image_id(self, image_name, request, context):
+        images_list = self.get_images_list(request, context)
+
+        if images_list:
+            for image in images_list:
+                if image_name == getattr(image[1],'name',''):
+                    return image[0]
+        return ''
+    
+    def get_exists_name(self):
+        try:
+            instances, _more = api.nova.server_list(
+                self.request,
+                all_tenants=True)
+            exists_name = [getattr(i,'name','') for i in instances]
+        except Exception:
+            self._more = False
+            exceptions.handle(self.request,
+                              _('Unable to retrieve instance list.'))
+            exists_name = []
+
+        return exists_name
+    
     def clean(self):
         cleaned_data = super(SetInstanceDetailsAction, self).clean()
+        
+        exists_name = self.get_exists_name()
+        if cleaned_data.get('name') in exists_name:
+            raise forms.ValidationError(_('The name is already used by another vm.'))
+        
+        flavor_vcpus = cleaned_data.get('flavor_vcpus')
+        flavor_ram = cleaned_data.get('flavor_ram')
+
+        if cleaned_data.get('cluster_id') and not cleaned_data.get('template_id'):
+            raise forms.ValidationError(_('Please select one template.'))
+
+        if cleaned_data.get('template_id') and cleaned_data.get('cluster_id') \
+                and cleaned_data.get('flavor_vcpus') and cleaned_data.get('flavor_ram'):
+            
+            _flavors = []
+            try:
+                _flavors = api.nova.flavor_list(self.request, None) or []
+            except Exception as e:
+                pass
+            finded = False
+            
+            for f in _flavors:
+                if getattr(f,'vcpus','0') and getattr(f,'ram','0'):
+                    if int(flavor_vcpus) == int(f.vcpus) and int(flavor_ram) == int(f.ram):
+                        cleaned_data['flavor'] = getattr(f,'id','')
+                        finded = True
+            if not finded:
+                new_flavor = None
+                try:
+                    new_flavor = api.nova.flavor_create(self.request,
+                                                 name='vflavor-' + str(uuid.uuid4()),
+                                                 memory=flavor_ram,
+                                                 vcpu=flavor_vcpus,
+                                                 disk='10',
+                                                 ephemeral='0',
+                                                 swap='0',
+                                                 is_public=True)
+                except Exception:
+                    exceptions.handle(self.request, _('Unable to create flavor.'))
+                new_flavor_id = getattr(new_flavor,'id','') if new_flavor else ''
+                cleaned_data['flavor'] = new_flavor_id
+            
+                
+#             cleaned_data['flavor'] = '8'
+            cleaned_data['source_type'] = 'image_id'
+            cleaned_data['image_id'] = self.get_image_id('cserver_template_image', self.request, self.context)
 
         count = cleaned_data.get('count', 1)
         # Prevent launching more instances than the quota allows
@@ -310,8 +443,13 @@ class SetInstanceDetailsAction(workflows.Action):
 
     def populate_flavor_choices(self, request, context):
         flavors = instance_utils.flavor_list(request)
-        if flavors:
-            return instance_utils.sort_flavor_list(request, flavors)
+        res_flavors = []
+        for i in flavors:
+            if getattr(i, 'name', '') not in ('m1.cserver_flavor','m1.vcenter_flavor'):
+                res_flavors.append(i)
+            
+        if res_flavors:
+            return instance_utils.sort_flavor_list(request, res_flavors)
         return []
 
     def populate_availability_zone_choices(self, request, context):
@@ -371,11 +509,12 @@ class SetInstanceDetailsAction(workflows.Action):
                   'size': volume.size,
                   'label': visible_label}))
 
-    def populate_image_id_choices(self, request, context):
+    def get_images_list(self, request, context):
         choices = []
         images = image_utils.get_available_images(request,
                                             context.get('project_id'),
                                             self._images_cache)
+
         for image in images:
             image.bytes = image.size
             image.volume_size = max(
@@ -390,6 +529,14 @@ class SetInstanceDetailsAction(workflows.Action):
         else:
             choices.insert(0, ("", _("No images available")))
         return choices
+
+    def populate_image_id_choices(self, request, context):
+        images = self.get_images_list(request, context)
+        res_images = []
+        for image in images:
+            if getattr(image[1],'name','') not in ('cserver_template_image','vcenter_template_image'):
+                res_images.append(image)
+        return res_images
 
     def populate_instance_snapshot_id_choices(self, request, context):
         images = image_utils.get_available_images(request,
@@ -406,14 +553,13 @@ class SetInstanceDetailsAction(workflows.Action):
         return choices
 
     def populate_volume_id_choices(self, request, context):
-        volumes = []
         try:
-            if base.is_service_enabled(request, 'volume'):
-                volumes = [self._get_volume_display_name(v)
-                           for v in cinder.volume_list(self.request)
-                           if (v.status == api.cinder.VOLUME_STATE_AVAILABLE
-                               and v.bootable == 'true')]
+            volumes = [self._get_volume_display_name(v)
+                       for v in cinder.volume_list(self.request)
+                       if v.status == api.cinder.VOLUME_STATE_AVAILABLE
+                        and v.bootable == 'true']
         except Exception:
+            volumes = []
             exceptions.handle(self.request,
                               _('Unable to retrieve list of volumes.'))
         if volumes:
@@ -423,13 +569,12 @@ class SetInstanceDetailsAction(workflows.Action):
         return volumes
 
     def populate_volume_snapshot_id_choices(self, request, context):
-        snapshots = []
         try:
-            if base.is_service_enabled(request, 'volume'):
-                snaps = cinder.volume_snapshot_list(self.request)
-                snapshots = [self._get_volume_display_name(s) for s in snaps
-                             if s.status == api.cinder.VOLUME_STATE_AVAILABLE]
+            snapshots = cinder.volume_snapshot_list(self.request)
+            snapshots = [self._get_volume_display_name(s) for s in snapshots
+                         if s.status == api.cinder.VOLUME_STATE_AVAILABLE]
         except Exception:
+            snapshots = []
             exceptions.handle(self.request,
                               _('Unable to retrieve list of volume '
                                 'snapshots.'))
@@ -443,7 +588,7 @@ class SetInstanceDetailsAction(workflows.Action):
 class SetInstanceDetails(workflows.Step):
     action_class = SetInstanceDetailsAction
     depends_on = ("project_id", "user_id")
-    contributes = ("source_type", "source_id",
+    contributes = ("source_type", "source_id",#"template_id","cluster_id",
                    "availability_zone", "name", "count", "flavor",
                    "device_name",  # Can be None for an image.
                    "delete_on_terminate")
@@ -470,6 +615,13 @@ class SetInstanceDetails(workflows.Step):
         if "volume_size" in data:
             context["volume_size"] = data["volume_size"]
 
+        context['metadata'] = {}
+        if data.get('template_id'):
+            context['metadata']['template_id'] = data.get('template_id')
+        if data.get('cluster_id'):
+            context['metadata']['cluster_id'] = data.get('cluster_id')
+        if data.get('flavor'):
+            context['metadata']['flavor_id'] = data.get('flavor')
         return context
 
 
@@ -567,15 +719,13 @@ class CustomizeAction(workflows.Action):
         help_text_template = ("project/instances/"
                               "_launch_customize_help.html")
 
-    source_choices = [('', _('Select Script Source')),
-                      ('raw', _('Direct Input')),
+    source_choices = [('raw', _('Direct Input')),
                       ('file', _('File'))]
 
     attributes = {'class': 'switchable', 'data-slug': 'scriptsource'}
     script_source = forms.ChoiceField(label=_('Customization Script Source'),
-                                      choices=source_choices,
-                                      widget=forms.Select(attrs=attributes),
-                                      required=False)
+                                        choices=source_choices,
+                                        widget=forms.Select(attrs=attributes))
 
     script_help = _("A script or set of commands to be executed after the "
                     "instance has been built (max 16kb).")
@@ -868,10 +1018,14 @@ class LaunchInstance(workflows.Workflow):
                 nics = [{"port-id": port.id}]
 
         try:
+            if context.get('metadata').get('template_id'):
+                j_flavor = '8'
+            else:
+                j_flavor = context['flavor']
             api.nova.server_create(request,
                                    context['name'],
                                    image_id,
-                                   context['flavor'],
+                                   j_flavor,
                                    context['keypair_id'],
                                    normalize_newlines(custom_script),
                                    context['security_group_ids'],
@@ -882,7 +1036,12 @@ class LaunchInstance(workflows.Workflow):
                                    instance_count=int(context['count']),
                                    admin_pass=context['admin_pass'],
                                    disk_config=context.get('disk_config'),
-                                   config_drive=context.get('config_drive'))
+                                   config_drive=context.get('config_drive'),
+                                   meta=context.get('metadata'))
+
+            operate_log(request.user.username,
+                        request.user.roles,
+                        context["name"]+" instance create")
             return True
         except Exception:
             exceptions.handle(request)

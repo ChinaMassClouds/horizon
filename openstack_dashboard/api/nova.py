@@ -40,7 +40,9 @@ from horizon.utils.memoized import memoized  # noqa
 
 from openstack_dashboard.api import base
 from openstack_dashboard.api import network_base
-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 LOG = logging.getLogger(__name__)
 
@@ -558,7 +560,6 @@ def server_delete(request, instance):
 def server_get(request, instance_id):
     return Server(novaclient(request).servers.get(instance_id), request)
 
-
 def server_list(request, search_opts=None, all_tenants=False):
     page_size = utils.get_page_size(request)
     c = novaclient(request)
@@ -585,6 +586,37 @@ def server_list(request, search_opts=None, all_tenants=False):
                                               1000):
         has_more_data = True
     return (servers, has_more_data)
+
+def server_list_with_prev(request, search_opts=None, all_tenants=False):
+    page_size = utils.get_page_size(request)
+    c = novaclient(request)
+    paginate = False
+    if search_opts is None:
+        search_opts = {}
+    elif 'paginate' in search_opts:
+        paginate = search_opts.pop('paginate')
+        if paginate:
+            search_opts['limit'] = page_size + 1
+
+    if all_tenants:
+        search_opts['all_tenants'] = True
+    else:
+        search_opts['project_id'] = request.user.tenant_id
+    servers = [Server(s, request)
+                for s in c.servers.list(True, search_opts)]
+
+    has_more_data = False
+    has_prev_data = False
+
+    if search_opts.get('marker') or search_opts.get('prev_marker'):
+        has_prev_data = True
+    if paginate and len(servers) > page_size:
+        servers.pop(-1)
+        has_more_data = True
+    elif paginate and len(servers) == getattr(settings, 'API_RESULT_LIMIT',
+                                              1000):
+        has_more_data = True
+    return (servers, has_more_data,has_prev_data)
 
 
 def server_console_output(request, instance_id, tail_length=None):
@@ -711,13 +743,13 @@ def instance_volume_detach(request, instance_id, att_id):
 
 
 def instance_volumes_list(request, instance_id):
-    from openstack_dashboard.api import cinder
+    from openstack_dashboard.api.cinder import cinderclient  # noqa
 
     volumes = novaclient(request).volumes.get_server_volumes(instance_id)
 
     for volume in volumes:
-        volume_data = cinder.cinderclient(request).volumes.get(volume.id)
-        volume.name = cinder.Volume(volume_data).name
+        volume_data = cinderclient(request).volumes.get(volume.id)
+        volume.name = volume_data.display_name
 
     return volumes
 

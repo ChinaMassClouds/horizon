@@ -17,6 +17,7 @@ from django.utils.translation import ungettext_lazy
 from horizon import tables
 
 from openstack_dashboard.api import cinder
+from openstack_dashboard.openstack.common.log import policy_is
 
 
 class CreateVolumeType(tables.LinkAction):
@@ -26,6 +27,9 @@ class CreateVolumeType(tables.LinkAction):
     classes = ("ajax-modal",)
     icon = "plus"
     policy_rules = (("volume", "volume_extension:types_manage"),)
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
 
 class ViewVolumeTypeExtras(tables.LinkAction):
@@ -66,6 +70,9 @@ class DeleteVolumeType(tables.DeleteAction):
     def delete(self, request, obj_id):
         cinder.volume_type_delete(request, obj_id)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class VolumeTypesTable(tables.DataTable):
     name = tables.Column("name", verbose_name=_("Name"))
@@ -85,6 +92,27 @@ class VolumeTypesTable(tables.DataTable):
         row_actions = (ViewVolumeTypeExtras,
                        ManageQosSpecAssociation,
                        DeleteVolumeType,)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+       if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+           self.columns['multi_select'].attrs = {'class':'hide'}
+           self.columns['actions'].attrs = {'class':'hide'}
+       return self.columns.values()
 
 
 # QOS Specs section of panel
@@ -110,6 +138,9 @@ class CreateQosSpec(tables.LinkAction):
     icon = "plus"
     policy_rules = (("volume", "volume_extension:types_manage"),)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
+
 
 class DeleteQosSpecs(tables.DeleteAction):
     @staticmethod
@@ -128,6 +159,9 @@ class DeleteQosSpecs(tables.DeleteAction):
             count
         )
     policy_rules = (("volume", "volume_extension:types_manage"),)
+
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'admin', 'sysadmin')
 
     def delete(self, request, qos_spec_id):
         cinder.qos_spec_delete(request, qos_spec_id)
@@ -161,3 +195,24 @@ class QosSpecsTable(tables.DataTable):
         verbose_name = _("QOS Specs")
         table_actions = (CreateQosSpec, DeleteQosSpecs,)
         row_actions = (ManageQosSpec, EditConsumer, DeleteQosSpecs)
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+       if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+           self.columns['multi_select'].attrs = {'class':'hide'}
+           self.columns['actions'].attrs = {'class':'hide'}
+       return self.columns.values()

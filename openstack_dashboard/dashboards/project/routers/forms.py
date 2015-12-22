@@ -27,6 +27,7 @@ from horizon import forms
 from horizon import messages
 
 from openstack_dashboard import api
+from openstack_dashboard.openstack.common.log import operate_log
 
 LOG = logging.getLogger(__name__)
 
@@ -67,6 +68,9 @@ class CreateForm(forms.SelfHandlingForm):
             if (self.ha_allowed and data['ha'] != 'server_default'):
                 params['ha'] = (data['ha'] == 'enabled')
             router = api.neutron.router_create(request, **params)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + " router create")
             message = _('Router %s was successfully created.') % data['name']
             messages.success(request, message)
             return router
@@ -111,11 +115,8 @@ class UpdateForm(forms.SelfHandlingForm):
                             ('distributed', _('Distributed'))]
             self.fields['mode'].choices = mode_choices
 
-        # TODO(amotoki): Due to Neutron Bug 1378525, Neutron disables
-        # PUT operation. It will be fixed in Kilo cycle.
-        # self.ha_allowed = api.neutron.get_feature_permission(
-        #     self.request, "l3-ha", "update")
-        self.ha_allowed = False
+        self.ha_allowed = api.neutron.get_feature_permission(self.request,
+                                                             "l3-ha", "update")
         if not self.ha_allowed:
             del self.fields['ha']
 
@@ -129,6 +130,9 @@ class UpdateForm(forms.SelfHandlingForm):
                 params['ha'] = data['ha']
             router = api.neutron.router_update(request, data['router_id'],
                                                **params)
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"] + " router update")
             msg = _('Router %s was successfully updated.') % data['name']
             LOG.debug(msg)
             messages.success(request, msg)

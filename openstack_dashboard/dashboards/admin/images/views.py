@@ -69,9 +69,13 @@ class IndexView(tables.DataTableView):
                 paginate=True,
                 filters=filters,
                 sort_dir=sort_dir)
+            res_images = []
+            for i in images:
+                if getattr(i,'name','') not in ('cserver_template_image','vcenter_template_image'):
+                    res_images.append(i)
 
             if prev_marker is not None:
-                images = sorted(images, key=lambda image:
+                res_images = sorted(res_images, key=lambda image:
                                 getattr(image, 'created_at'), reverse=True)
 
         except Exception:
@@ -79,7 +83,7 @@ class IndexView(tables.DataTableView):
             self._more = False
             msg = _('Unable to retrieve image list.')
             exceptions.handle(self.request, msg)
-        return images
+        return res_images
 
     def get_filters(self):
         filters = {'is_public': None}

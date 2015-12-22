@@ -48,8 +48,11 @@ class IndexView(tables.DataTableView):
         try:
             (images, self._more, self._prev) = api.glance.image_list_detailed(
                 self.request, marker=marker)
-
+            res_images = []
+            for i in images:
+                if getattr(i,'name','') not in ('cserver_template_image','vcenter_template_image'):
+                    res_images.append(i)
         except Exception:
-            images = []
+            res_images = []
             exceptions.handle(self.request, _("Unable to retrieve images."))
-        return images
+        return res_images

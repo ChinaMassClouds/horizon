@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.project import dashboard
 class Overview(horizon.Panel):
     name = _("Overview")
     slug = 'overview'
+    img = '/static/dashboard/img/nav/overview1.png'
 
 
 dashboard.Project.register(Overview)

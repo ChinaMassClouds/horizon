@@ -25,6 +25,7 @@ from horizon import workflows
 
 from openstack_dashboard import api
 from openstack_dashboard.utils import filters
+from openstack_dashboard.openstack.common.log import operate_log
 
 INDEX_URL = "horizon:projects:instances:index"
 ADD_USER_URL = "horizon:projects:instances:create_user"
@@ -110,6 +111,9 @@ class UpdateInstanceInfoAction(workflows.Action):
             api.nova.server_update(request,
                                    data['instance_id'],
                                    data['name'])
+            operate_log(request.user.username,
+                        request.user.roles,
+                        data["name"]+" instance update")
         except Exception:
             exceptions.handle(request, ignore=True)
             return False

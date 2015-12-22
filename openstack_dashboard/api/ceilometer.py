@@ -281,7 +281,7 @@ def ceilometerclient(request):
     return ceilometer_client.Client('2', endpoint,
                                     token=(lambda: request.user.token.id),
                                     insecure=insecure,
-                                    cacert=cacert)
+                                    ca_file=cacert)
 
 
 def resource_list(request, query=None, ceilometer_usage_object=None):
@@ -310,6 +310,31 @@ def statistic_list(request, meter_name, query=None, period=None):
         statistics.list(meter_name=meter_name, q=query, period=period)
     return [Statistic(s) for s in statistics]
 
+# zhangdebo
+def create_alarm(request, param):
+    return ceilometerclient(request).alarms.create(name=param.get('name'),
+                                                   type=param.get('type'),
+                                                   threshold_rule=param.get('threshold_rule'),
+                                                   alarm_actions=param.get('alarm_actions'),
+                                                   enabled=param.get('enabled'))
+
+def update_alarm(request, obj):
+    return ceilometerclient(request).alarms.update(alarm_id=getattr(obj,'alarm_id',''),
+                                                name=getattr(obj,'name',''),
+                                                type=getattr(obj,'type',''),
+                                                threshold_rule=getattr(obj,'threshold_rule',''),
+                                                alarm_actions=getattr(obj,'alarm_actions',''),
+                                                enabled=getattr(obj,'enabled',''))
+
+def get_alarm(request, p_id):
+    return ceilometerclient(request).alarms.get(alarm_id=p_id)
+
+def delete_alarm(request, p_id):
+    return ceilometerclient(request).alarms.delete(alarm_id=p_id)
+
+def get_alarm_hist(request, p_id):
+    return ceilometerclient(request).alarms.get_history(alarm_id=p_id,q=[{'field':'type',
+                                                                          'value':'state transition'}])
 
 class ThreadedUpdateResourceWithStatistics(threading.Thread):
     """Multithread wrapper for update_with_statistics method of

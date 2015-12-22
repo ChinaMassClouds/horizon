@@ -116,6 +116,17 @@ horizon.forms = {
   }
 };
 
+horizon.forms.bind_add_item_handlers = function (el) {
+  var $selects = $(el).find('select[data-add-item-url]');
+  $selects.each(function () {
+    var $this = $(this);
+    $button = $("<a href='" + $this.attr("data-add-item-url") + "' " +
+      "data-add-to-field='" + $this.attr("id") + "' " +
+      "class='btn ajax-add ajax-modal btn-default'>+</a>");
+    $this.after($button);
+  });
+};
+
 horizon.forms.prevent_multiple_submission = function (el) {
   // Disable multiple submissions when launching a form.
   var $form = $(el).find("form");
@@ -150,10 +161,10 @@ horizon.forms.add_password_fields_reveal_buttons = function (el) {
   };
 
 
-  $(el).find('input[type="password"]').each(function (i, input) {
+  $(el).find('input[type="password"]:visible').each(function (i, input) {
     var $input = $(input);
 
-    $input.closest('div').addClass("has-feedback");
+    $input.closest('.form-group').addClass("has-feedback");
     $('<span>').addClass(
       "form-control-feedback glyphicon glyphicon-eye-open"
     ).insertAfter($input).click(function () {
@@ -187,6 +198,9 @@ horizon.forms.init_examples = function (el) {
 horizon.addInitFunction(function () {
   horizon.forms.prevent_multiple_submission($('body'));
   horizon.modals.addModalInitFunction(horizon.forms.prevent_multiple_submission);
+
+  horizon.forms.bind_add_item_handlers($("body"));
+  horizon.modals.addModalInitFunction(horizon.forms.bind_add_item_handlers);
 
   horizon.forms.init_examples($("body"));
   horizon.modals.addModalInitFunction(horizon.forms.init_examples);

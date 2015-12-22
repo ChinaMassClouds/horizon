@@ -26,6 +26,7 @@ from openstack_dashboard.dashboards.admin import dashboard
 class Info(horizon.Panel):
     name = _("System Information")
     slug = 'info'
+    img = '/static/dashboard/img/nav/info1.png'
 
 
 dashboard.Admin.register(Info)

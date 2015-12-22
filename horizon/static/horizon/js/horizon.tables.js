@@ -1,9 +1,8 @@
 /* Namespace for core functionality related to DataTables. */
 horizon.datatables = {
   update: function () {
-    var $rows_to_update = $('tr.status_unknown.ajax-update'),
-      rows_to_update = $rows_to_update.length;
-    if ( rows_to_update > 0 ) {
+    var $rows_to_update = $('tr.status_unknown.ajax-update');
+    if ($rows_to_update.length) {
       var interval = $rows_to_update.attr('data-update-interval'),
         $table = $rows_to_update.closest('table'),
         decay_constant = $table.attr('decay_constant');
@@ -92,22 +91,19 @@ horizon.datatables = {
           complete: function (jqXHR, textStatus) {
             // Revalidate the button check for the updated table
             horizon.datatables.validate_button();
-            rows_to_update--;
-            // Schedule next poll when all the rows are updated
-            if ( rows_to_update === 0 ) {
-              // Set interval decay to this table, and increase if it already exist
-              if(decay_constant === undefined) {
-                decay_constant = 1;
-              } else {
-                decay_constant++;
-              }
-              $table.attr('decay_constant', decay_constant);
-              // Poll until there are no rows in an "unknown" state on the page.
-              var next_poll = interval * decay_constant;
-              // Limit the interval to 30 secs
-              if(next_poll > 30 * 1000) { next_poll = 30 * 1000; }
-              setTimeout(horizon.datatables.update, next_poll);
+
+            // Set interval decay to this table, and increase if it already exist
+            if(decay_constant === undefined) {
+              decay_constant = 1;
+            } else {
+              decay_constant++;
             }
+            $table.attr('decay_constant', decay_constant);
+            // Poll until there are no rows in an "unknown" state on the page.
+            next_poll = interval * decay_constant;
+            // Limit the interval to 30 secs
+            if(next_poll > 30 * 1000) { next_poll = 30 * 1000; }
+            setTimeout(horizon.datatables.update, next_poll);
           }
         });
       });
@@ -142,8 +138,10 @@ horizon.datatables = {
       var action_buttons = $(this).find(".table_actions button.btn-danger");
 
       // Buttons should be enabled only if there are checked checkboxes
-      action_buttons.toggleClass("disabled",
-                                 !checkboxes.filter(":checked").length);
+      if (checkboxes.length) {
+        action_buttons.toggleClass("disabled",
+          !checkboxes.filter(":checked").length);
+        }
     });
   },
 
@@ -491,10 +489,6 @@ horizon.datatables.set_table_query_filter = function (parent) {
 horizon.datatables.set_table_fixed_filter = function (parent) {
   $(parent).find('table.datatable').each(function (index, elm) {
     $(elm).on('click', 'div.table_filter button', function(evt) {
-      // Remove active class from all buttons
-      $(elm).find('div.table_filter button').each(function(index, btn) {
-        $(btn).removeClass('active');
-      });
       var table = $(elm);
       var category = $(this).val();
       evt.preventDefault();
@@ -508,6 +502,7 @@ horizon.datatables.set_table_fixed_filter = function (parent) {
     $(elm).find('div.table_filter button').each(function (i, button) {
       // Select the first non-empty category
       if ($(button).text().indexOf(' (0)') === -1) {
+        $(button).addClass('active');
         $(button).trigger('click');
         return false;
       }

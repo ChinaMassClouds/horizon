@@ -26,6 +26,7 @@ from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.networks \
     import tables as project_tables
 from openstack_dashboard import policy
+from openstack_dashboard.openstack.common.log import policy_is
 
 LOG = logging.getLogger(__name__)
 
@@ -58,6 +59,9 @@ class DeleteNetwork(policy.PolicyTargetMixin, tables.DeleteAction):
             redirect = reverse('horizon:admin:networks:index')
             exceptions.handle(request, msg, redirect=redirect)
 
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'sysadmin', 'admin')
+
 
 class CreateNetwork(tables.LinkAction):
     name = "create"
@@ -66,7 +70,8 @@ class CreateNetwork(tables.LinkAction):
     classes = ("ajax-modal",)
     icon = "plus"
     policy_rules = (("network", "create_network"),)
-
+    def allowed(self, request, datum):
+        return policy_is(request.user.username, 'sysadmin', 'admin')
 
 class EditNetwork(policy.PolicyTargetMixin, tables.LinkAction):
     name = "update"
@@ -109,3 +114,24 @@ class NetworksTable(tables.DataTable):
         if not api.neutron.is_extension_supported(request,
                                                   'dhcp_agent_scheduler'):
             del self.columns['num_agents']
+
+    def get_rows(self):
+        """Return the row data for this table broken out by columns."""
+        rows = []
+        policy = policy_is(self.request.user.username, 'sysadmin', 'admin')
+        for datum in self.filtered_data:
+            row = self._meta.row_class(self, datum)
+            if self.get_object_id(datum) == self.current_item_id:
+                self.selected = True
+                row.classes.append('current_selected')
+            if not policy:
+                del row.cells['actions']
+                del row.cells['multi_select']
+            rows.append(row)
+        return rows
+
+    def get_columns(self):
+        if not(policy_is(self.request.user.username, 'sysadmin', 'admin')):
+            self.columns['multi_select'].attrs = {'class':'hide'}
+            self.columns['actions'].attrs = {'class':'hide'}
+        return self.columns.values()

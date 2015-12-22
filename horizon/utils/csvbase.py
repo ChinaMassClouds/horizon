@@ -61,7 +61,7 @@ class CsvDataMixin(object):
     def encode(self, value):
         # csv and StringIO cannot work with mixed encodings,
         # so encode all with utf-8
-        return unicode(value).encode('utf-8')
+        return unicode(value).encode('GBK')
 
 
 class BaseCsvResponse(CsvDataMixin, HttpResponse):

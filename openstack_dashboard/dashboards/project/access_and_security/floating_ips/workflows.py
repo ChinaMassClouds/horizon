@@ -24,6 +24,7 @@ from horizon import workflows
 
 from openstack_dashboard import api
 from openstack_dashboard.utils import filters
+from openstack_dashboard.openstack.common.log import operate_log
 
 
 ALLOCATE_URL = "horizon:project:access_and_security:floating_ips:allocate"
@@ -148,6 +149,9 @@ class IPAssociationWorkflow(workflows.Workflow):
             api.network.floating_ip_associate(request,
                                               data['ip_id'],
                                               data['instance_id'])
+            operate_log(request.user.username,
+                        request.user.roles,
+                        "floating ip associate")
         except Exception:
             exceptions.handle(request)
             return False

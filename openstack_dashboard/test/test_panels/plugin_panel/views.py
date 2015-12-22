@@ -15,4 +15,3 @@ from django.views.generic import TemplateView  # noqa
 
 class IndexView(TemplateView):
     template_name = 'admin/plugin_panel/index.html'
-    page_title = 'Plugin-based Panel'
